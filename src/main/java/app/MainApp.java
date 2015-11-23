@@ -2,7 +2,6 @@ package app;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import model.Cluster;
 import model.Point;
@@ -38,8 +37,6 @@ public class MainApp {
 	JavaRDD<ArrayList<Cluster>> clusters = snapshots.map(DBSCAN);
 	List<ArrayList<Cluster>> results = clusters.collect();
 //	Map<Integer, SnapShot> results = snapshots.collectAsMap();
-
-	
 
 	System.out.println(results.size());
 	context.close();
