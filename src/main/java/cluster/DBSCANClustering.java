@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;  
 
+import conf.AppProperties;
+
 import util.DistanceOracle;
 
 import model.Cluster;
@@ -38,8 +40,8 @@ public class DBSCANClustering {
      * @param minPts minimum number of points needed for a cluster
      */
     public DBSCANClustering(SnapShot sp) {
-        this.eps = conf.Constants.eps;
-        this.minPts = conf.Constants.minPts;
+	this.eps = Double.parseDouble(AppProperties.getProperty("eps"));
+        this.minPts =Integer.parseInt(AppProperties.getProperty("minPts"));
         this.sp = sp;
         clusters = cluster();
     }

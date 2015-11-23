@@ -1,7 +1,6 @@
 package app;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import model.Cluster;
 import model.Point;
@@ -15,30 +14,34 @@ import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFunction;
 
+import conf.AppProperties;
+
 import cluster.DBSCANClustering;
 
 import scala.Tuple2;
 
 public class MainApp {
-
+    
+    
     public static void main(String[] args) {
+	conf.AppProperties.initProperty("app-config.xml");
 	// initialization
-	SparkConf conf = new SparkConf().setAppName("TrajectoryMining")
-		.setMaster("local");
+	SparkConf conf = new SparkConf()
+			.setAppName(AppProperties.getProperty("appName"))
+			.setMaster(AppProperties.getProperty("spark_master"));
 	JavaSparkContext context = new JavaSparkContext(conf);
 	JavaRDD<String> rawFiles = context
-		.textFile("hdfs://cloud2.d1.comp.nus.edu.sg:9000/usr/fanqi/data/geolife");
+		.textFile(AppProperties.getProperty("hdfs_input"));
 	JavaPairRDD<Integer, SnapShot> snapshots = rawFiles
-		.filter(removeInvalidTuple).mapToPair(tupleToSP)
+		.filter(removeInvalidTuple)
+		.mapToPair(tupleToSP)
 		.reduceByKey(combineSP);
 	// then for each snapshots, we need a DBSCAN
 	// afterwards, snapshots contains many ArrayList of clusters. Each
 	// ArrayList represent a snapshot.
 	JavaRDD<ArrayList<Cluster>> clusters = snapshots.map(DBSCAN);
-	List<ArrayList<Cluster>> results = clusters.collect();
-//	Map<Integer, SnapShot> results = snapshots.collectAsMap();
-
-	System.out.println(results.size());
+	clusters.collect();
+//	System.out.println(results.size());
 	context.close();
     }
 
