@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<!-- The following is to specify DBSCAN parameters-->
+	<entry key="eps">1000</entry>
+	<entry key="minPts">5</entry>
+<!-- The following is to specify Spark parameters-->
+	<entry key="appName">Trajectory Mining</entry>
+	<entry key="spark_master">local</entry>
+<!-- The following is to specify input directory -->
+	<entry key="hdfs_input">hdfs://cloud2.d1.comp.nus.edu.sg:9000/usr/fanqi/data/geolife</entry>
+</properties>
