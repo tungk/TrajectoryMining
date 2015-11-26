@@ -4,8 +4,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-public class AppProperties {
-   
+public class AppProperties{
+    private static  Properties props;
+
     public static void initProperty(String filename) {
 	if(props == null) {
 	    props = new Properties();
@@ -15,8 +16,6 @@ public class AppProperties {
 	    e.printStackTrace();
 	}
     }
-    
-    private static Properties props;
     
     public static String getProperty(String prop_name) {
 	return props.getProperty(prop_name);

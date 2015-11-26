@@ -6,7 +6,11 @@
 	<entry key="minPts">5</entry>
 <!-- The following is to specify Spark parameters-->
 	<entry key="appName">Trajectory Mining</entry>
-	<entry key="spark_master">local</entry>
-<!-- The following is to specify input directory -->
+	<entry key="spark_master">local[2]</entry>
+<!-- The following is to specify i/o directory -->
 	<entry key="hdfs_input">hdfs://cloud2.d1.comp.nus.edu.sg:9000/usr/fanqi/data/geolife</entry>
+	<entry key="hdfs_output">hdfs://cloud2.d1.comp.nus.edu.sg:9000/usr/fanqi/output/geolife</entry>
+<!-- The following is to specify application related partitions -->
+	<entry key="hdfs_read_partitions">2</entry>
+	<entry key="snapshot_partitions">17</entry>
 </properties>

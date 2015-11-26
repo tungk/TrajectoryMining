@@ -40,8 +40,10 @@ public class DBSCANClustering {
      * @param minPts minimum number of points needed for a cluster
      */
     public DBSCANClustering(SnapShot sp) {
-	this.eps = Double.parseDouble(AppProperties.getProperty("eps"));
-        this.minPts =Integer.parseInt(AppProperties.getProperty("minPts"));
+//	this.eps = Double.parseDouble(AppProperties.getProperty("eps"));
+//        this.minPts =Integer.parseInt(AppProperties.getProperty("minPts"));
+	eps = 1000;
+	minPts = 5;
         this.sp = sp;
         clusters = cluster();
     }
