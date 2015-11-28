@@ -48,9 +48,11 @@ public class MainApp {
 			combineSP,
 			Integer.parseInt(AppProperties
 				.getProperty("snapshot_partitions")));
+	
 	// then for each snapshots, we need a DBSCAN
 	// afterwards, snapshots contains many ArrayList of clusters. Each
 	// ArrayList represent a snapshot.
+	
 	JavaRDD<ArrayList<Cluster>> clusters = snapshots.map(DBSCAN);
 	clusters.collect();
 	clusters.saveAsTextFile(AppProperties.getProperty("hdfs_output"));
