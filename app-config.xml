@@ -4,6 +4,10 @@
 <!-- The following is to specify DBSCAN parameters-->
 	<entry key="eps">1000</entry>
 	<entry key="minPts">5</entry>
+	<entry key="K">50</entry>
+	<entry key="G">3</entry>
+	<entry key="L">10</entry>
+	<entry key="M">10</entry>
 <!-- The following is to specify Spark parameters-->
 	<entry key="appName">Trajectory Mining</entry>
 	<entry key="spark_master">local[2]</entry>

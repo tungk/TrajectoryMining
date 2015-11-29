@@ -8,6 +8,8 @@ import model.Point;
 import model.SnapShot;
 
 import org.apache.spark.SparkConf;
+import org.apache.spark.SparkEnv;
+import org.apache.spark.TaskContext;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -20,6 +22,7 @@ import cluster.DBSCANClustering;
 import scala.Tuple2;
 
 public class MainApp {
+   
     public static void main(String[] args) {
 	String configPath;
 	SparkConf conf = new SparkConf();
@@ -52,8 +55,14 @@ public class MainApp {
 	// then for each snapshots, we need a DBSCAN
 	// afterwards, snapshots contains many ArrayList of clusters. Each
 	// ArrayList represent a snapshot.
-	
 	JavaRDD<ArrayList<Cluster>> clusters = snapshots.map(DBSCAN);
+	
+	//Each object has its cluster_id at each valid time-sequence
+	//object with length length < K is filtered first
+	clusters.mapToPair(null).groupByKey().filter(null);
+	//then we need to find patterns among those object
+	//the object growth algorithm plays a role now
+	
 	clusters.collect();
 	clusters.saveAsTextFile(AppProperties.getProperty("hdfs_output"));
 	context.close();
@@ -108,12 +117,29 @@ public class MainApp {
     };
     private static final Function<Tuple2<Integer, SnapShot>, ArrayList<Cluster>> DBSCAN = new Function<Tuple2<Integer, SnapShot>, ArrayList<Cluster>>() {
 	private static final long serialVersionUID = -8210452935171979228L;
-
+	
 	@Override
 	public ArrayList<Cluster> call(Tuple2<Integer, SnapShot> v1)
 		throws Exception {
+	    String cluster_id_prefix = SparkEnv.get().executorId();
 	    DBSCANClustering dbc = new DBSCANClustering(v1._2);
+	    ArrayList<Cluster> results = dbc.cluster();
+	    for(int i = 0; i < results.size(); i++) {
+		results.get(i).setID(Integer.parseInt(cluster_id_prefix + "00" +i));
+	    }
 	    return dbc.cluster();
+	}
+    };
+    
+    /**
+     * remove the object cluster with size less than $K$
+     */
+    private static final Function<ArrayList<Cluster>, Boolean> REMOVESHORTOBJECT = new Function<ArrayList<Cluster>, Boolean>(){
+	private static final long serialVersionUID = 3748376279218746194L;
+	
+	@Override
+	public Boolean call(ArrayList<Cluster> arg0) throws Exception {
+	    return null;
 	}
     };
 
