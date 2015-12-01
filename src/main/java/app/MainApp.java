@@ -6,6 +6,7 @@ import java.util.Iterator;
 
 import model.Cluster;
 import model.GroupClusters;
+import model.Pattern;
 import model.Point;
 import model.SnapShot;
 import model.TemporalCluster;
@@ -24,6 +25,22 @@ import cluster.DBSCANClustering;
 import scala.Tuple2;
 
 public class MainApp {
+    
+    private static class LOCALCMCMINING implements 
+    	Function<GroupClusters, ArrayList<Pattern>> {
+	private static final long serialVersionUID = 4766029572178793179L;
+	private int l, g;
+	public LOCALCMCMINING(int l, int g) {
+	    this.l = l;
+	    this.g = g;
+	}
+
+	@Override
+	public ArrayList<Pattern> call(GroupClusters arg0) throws Exception {
+	    return null;
+	}
+    }
+    
     /**
      * try this out...
      * @author a0048267
@@ -91,16 +108,11 @@ public class MainApp {
 	    while(itr.hasNext()) {
 		result.addCluster(itr.next());
 	    }
-	    result.sortByTime();
+	    result.sortByTime(); 
 	    return result;
 	}
 	
     };
-
-
-
-
-
 
     public static void main(String[] args) {
 	SparkConf conf = new SparkConf();
@@ -144,10 +156,14 @@ public class MainApp {
 	// ArrayList represent a snapshot.
 	JavaRDD<ArrayList<Cluster>> clusters = snapshots.map(DBSCAN);
 	
+	int L = Integer.parseInt(AppProperties.getProperty("L"));
+	int G = Integer.parseInt(AppProperties.getProperty("G"));
+
 	JavaPairRDD<Integer, GroupClusters> 
 	groupedCluster = clusters
 		.flatMapToPair(new OVERLAPPARTITION(least_ts._1, last_ts._1))
 		.groupByKey().mapValues(GROUPCLUSTERS);
+	groupedCluster.mapValues(new LOCALCMCMINING(L,G));
 	
 	
 	  
