@@ -16,7 +16,7 @@ public class Cluster implements Serializable{
     private int ts;
     private final SnapShot context;
     private HashSet<Integer> oids;
-    private int ID; // this ID is optionally set
+    private String ID; // this ID is optionally set
     public Cluster(SnapShot sp ) {
 	oids = new HashSet<Integer>();
 	context = sp;
@@ -48,16 +48,16 @@ public class Cluster implements Serializable{
 	return ts;
     }
     
-    public void setID(int id) {
+    public void setID(String id) {
 	ID = id;
     }
     
-    public int getID() {
+    public String getID() {
 	return ID;
     }
     
     @Override
     public String toString() {
-	return  ts + "\t" + oids.toString();
+	return  "<"+ID+":"+ ts + "\t" + oids.toString() +">";
     }
 }

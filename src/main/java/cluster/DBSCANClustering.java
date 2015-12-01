@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;  
 
+import org.apache.spark.SparkEnv;
+
 import conf.AppProperties;
 
 import util.DistanceOracle;
@@ -20,7 +22,9 @@ import model.SnapShot;
  *
  */
 public class DBSCANClustering {
-  
+    // this counter is per JVM, i.e. per executor, thus, executor_id + ID_counter will
+    // be a globally unique identifier for each cluster
+    private static int ID_COUNTER = 0;
     /** Status of a point during the clustering process. */
     private enum PointStatus {
         /** The point has is considered to be noise. */
@@ -42,19 +46,19 @@ public class DBSCANClustering {
     public DBSCANClustering(SnapShot sp) {
 //	this.eps = Double.parseDouble(AppProperties.getProperty("eps"));
 //        this.minPts =Integer.parseInt(AppProperties.getProperty("minPts"));
-	eps = 1000;
-	minPts = 5;
+	eps = Integer.parseInt(AppProperties.getProperty("eps"));
+	minPts = Integer.parseInt(AppProperties.getProperty("minPts"));
         this.sp = sp;
         clusters = cluster();
     }
     
-    public DBSCANClustering(double eps, int minPts, SnapShot sp) {
-        this.eps = eps;
-        this.minPts = minPts;
-        this.sp = sp;
-        clusters = cluster();
-    }
-    
+//    public DBSCANClustering(double eps, int minPts, SnapShot sp) {
+//        this.eps = eps;
+//        this.minPts = minPts;
+//        this.sp = sp;
+//        clusters = cluster();
+//    }
+//    
     public ArrayList<Cluster> getCluster() {
 	return clusters;
     }
@@ -81,7 +85,10 @@ public class DBSCANClustering {
             ArrayList<Integer> neighbors = getNeighbors(point);
             if (neighbors.size() >= minPts) {
                 // DBSCAN does not care about center points
+        	String id = SparkEnv.get().executorId();
         	Cluster cluster = new Cluster(sp);
+        	//set the global ID of this cluster
+        	cluster.setID(id+"00"+(ID_COUNTER++));
                 clusters.add(expandCluster(cluster, point, neighbors, visited));
             } else {
                 visited.put(point, PointStatus.NOISE);

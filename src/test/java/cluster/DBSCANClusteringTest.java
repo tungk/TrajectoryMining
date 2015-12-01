@@ -111,7 +111,7 @@ public class DBSCANClusteringTest {
 	sp.addObject(98, new Point(0.23107798751150577, 0.3001095314992386));
 	sp.addObject(99, new Point(0.6843923730214426, 0.3854659141175416));
 //	SnapshotVisualizer.drawSnapShot(sp);
-	DBSCANClustering dbc = new DBSCANClustering(12000, 1, sp);
+	DBSCANClustering dbc = new DBSCANClustering(sp);
 	ArrayList<Cluster> cluster = dbc.cluster();
 	for(Cluster c : cluster) {
 	    System.out.println(c);
