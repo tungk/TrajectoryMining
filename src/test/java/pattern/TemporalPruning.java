@@ -12,9 +12,9 @@ import scala.Tuple2;
 import conf.AppProperties;
 
 public class TemporalPruning {
-    private static int K = 10;
-    private static int L = 2;
-    private static int G = 3;
+    private static int K = 8;
+    private static int L = 4;
+    private static int G = 2;
 
     public static Boolean call(List<Integer> a) {
 	boolean valid = true;
@@ -54,8 +54,56 @@ public class TemporalPruning {
 	return valid;
     }
 
+    public static ArrayList<ArrayList<Integer>> genPattern(List<Integer> input) {
+	ArrayList<ArrayList<Integer>> result = new ArrayList<>();
+	int p_start = 0;
+	int p_prev = 0;
+	int p_consecutive = 1;
+	for (int p_next = 1; p_next < input.size(); p_next++) {
+	    int delta = input.get(p_next) - input.get(p_prev);
+	    System.out.println(p_next + "\t" + delta+"\t"+p_start+"\t"+p_prev+"\t"+p_next+"\t"+p_consecutive );
+	    if (delta == 1) {
+		p_prev = p_next;
+		p_consecutive++;
+		continue;
+	    }
+	    // checking gaps 
+	    if (delta <= G) {
+		// check consecutive
+		if (p_consecutive < L) {
+		    // do nothing;
+		    p_start = p_next;
+		    p_consecutive = 1;
+		} else {
+		    // continue to extend
+		}
+		p_prev = p_next;
+		continue;
+	    } else {
+		// checking whether to output
+		if (p_consecutive < L) {
+		    // do nothing;
+		    p_start = p_next;
+		} else {
+		    ArrayList<Integer> ps = new ArrayList<>();
+		    for (int i = p_start; i <= p_prev; i++) {
+			ps.add(input.get(i));
+		    }
+		    result.add(ps);
+		}
+		p_consecutive = 1;
+		p_prev = p_next;
+		p_start = p_next;
+		continue;
+	    }
+	}
+	return result;
+    }
+
     public static void main(String[] args) {
-	List<Integer> input = Arrays.asList(1,2,5,6,7,8,9,10,11);
-	System.out.println(call(input));
+	List<Integer> input = Arrays
+		.asList(1, 2, 3, 4, 7, 8, 9, 10, 12, 13, 15);
+	// System.out.println(call(input));
+	System.out.println(genPattern(input));
     }
 }

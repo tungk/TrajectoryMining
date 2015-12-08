@@ -36,7 +36,7 @@ public class MainApp {
 	}
 
 	@Override
-	public ArrayList<Pattern> call(GroupClusters arg0) throws Exception {
+	public ArrayList<Pattern> call(GroupClusters gc) throws Exception {
 	    return null;
 	}
     }
@@ -108,7 +108,7 @@ public class MainApp {
 	    while(itr.hasNext()) {
 		result.addCluster(itr.next());
 	    }
-	    result.sortByTime(); 
+	    result.validate(); 
 	    return result;
 	}
 	
@@ -184,7 +184,6 @@ public class MainApp {
 
     private static final Function<String, Boolean> removeInvalidTuple = new Function<String, Boolean>() {
 	private static final long serialVersionUID = 387051918037129559L;
-
 	@Override
 	public Boolean call(String v1) throws Exception {
 	    if (v1.isEmpty() || v1.charAt(0) == '#') {
@@ -193,7 +192,6 @@ public class MainApp {
 		return true;
 	    }
 	}
-
     };
 
     /**
@@ -302,7 +300,7 @@ public class MainApp {
 			valid = false;
 			break;
 		    }
-		    consecutive = 1;
+		    consecutive = 1; 
 		}
 		current = next;
 	    }

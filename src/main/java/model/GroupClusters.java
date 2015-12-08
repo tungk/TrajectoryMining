@@ -10,7 +10,6 @@ import java.util.Iterator;
 /**
  * this class implements a group clusters, which combines a set of clusters
  * based on proximate temporal domains
- * TODO:: In each reducer, we need to apply the Coherent Moving Cluster(CMC) method
  * on the GroupClusters
  * @author a0048267
  */
@@ -20,18 +19,20 @@ public class GroupClusters implements Serializable, Iterable<ArrayList<Cluster>>
     ArrayList<ArrayList<Cluster>> myClusters;
     private int start;
     private int end;  // the starting and ending time sequence of the group cluster
-//    private int size; // size = end - start +1;
-    
-//    @SuppressWarnings("unchecked")
-//    public GroupClusters(int start, int end) {
-//	size = end - start + 1;
-//	//we do not need to initialize the actual ArrayList, 
-//	//the element of myClusters is a reference to input
-////	myClusters = new ArrayList[size];
-//    }
+    //group cluster needs to be consecutive
     
     public GroupClusters(int size) {
 	myClusters = new ArrayList<>(size);
+	start = Integer.MAX_VALUE;
+	end = -1;
+    }
+    
+    public int getStart() {
+	return start;
+    }
+    
+    public int getEnd() {
+	return end;
     }
     
     public void addCluster(ArrayList<Cluster> input) {
@@ -42,6 +43,10 @@ public class GroupClusters implements Serializable, Iterable<ArrayList<Cluster>>
 	    end = ts;
 	}
 	myClusters.add(input);
+    }
+    
+    public ArrayList<Cluster> getClustersAt(int ts) {
+	return myClusters.get(ts - start);
     }
     
     @Override
@@ -59,7 +64,7 @@ public class GroupClusters implements Serializable, Iterable<ArrayList<Cluster>>
 	return myClusters.iterator();
     }
 
-    public void sortByTime() {
+    private void sortByTime() {
 	Collections.sort(myClusters, new Comparator<ArrayList<Cluster>>() {
 	    @Override
 	    public int compare(ArrayList<Cluster> o1, ArrayList<Cluster> o2) {
@@ -67,5 +72,17 @@ public class GroupClusters implements Serializable, Iterable<ArrayList<Cluster>>
 		int ts2 = o2.get(0).getTS();
 		return ts1-ts2;
 	    }});
+    }
+
+    /**
+     * make sure the group cluster is valid
+     * after calling this method, the clusters are sorted
+     * according to the time sequence
+     */
+    public void validate() {
+	sortByTime();
+	assert start == myClusters.get(0).get(0).getTS();
+	assert end == myClusters.get(myClusters.size() -1).get(0).getTS();
+	assert end - start + 1 == myClusters.size();
     }
 }

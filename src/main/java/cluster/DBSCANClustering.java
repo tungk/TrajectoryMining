@@ -52,12 +52,12 @@ public class DBSCANClustering {
         clusters = cluster();
     }
     
-//    public DBSCANClustering(double eps, int minPts, SnapShot sp) {
-//        this.eps = eps;
-//        this.minPts = minPts;
-//        this.sp = sp;
-//        clusters = cluster();
-//    }
+    public DBSCANClustering(double eps, int minPts, SnapShot sp) {
+        this.eps = eps;
+        this.minPts = minPts;
+        this.sp = sp;
+        clusters = cluster();
+    }
 //    
     public ArrayList<Cluster> getCluster() {
 	return clusters;
