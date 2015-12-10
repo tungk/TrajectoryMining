@@ -43,12 +43,12 @@ public class LocalCMCMiner implements
 	int end = v1.getEnd();
 	HashSet<Pattern> candidate_sets = new HashSet<>();
 	for (int t = start; t <= end; t++) {
-	    System.out.println("---------" + t + "---------");
+//	    System.out.println("---------" + t + "---------");
 	    ArrayList<Cluster> clusters = v1.getClustersAt(t);
 	    // see whether any cluster can extend the candidate
 	    for (Cluster cluster : clusters) {
-		System.out.println("s:\t" + candidate_sets);
-		System.out.println("c:\t" + cluster);
+//		System.out.println("s:\t" + candidate_sets);
+//		System.out.println("c:\t" + cluster);
 		if (t == start) {
 		    if (cluster.getObjects().size() >= M) {
 			Pattern p = new Pattern();
@@ -108,7 +108,7 @@ public class LocalCMCMiner implements
 			newp2.insertPattern(objects, new ArrayList<Integer>(), t);
 			tobeadded.add(newp2);
 		    }
-		    System.out.println("a:\t" + tobeadded);
+//		    System.out.println("a:\t" + tobeadded);
 		    candidate_sets.addAll(tobeadded);
 		}
 	    }

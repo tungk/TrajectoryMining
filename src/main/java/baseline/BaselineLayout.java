@@ -2,6 +2,7 @@ package baseline;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Map;
 
 import model.Cluster;
 import model.GroupClusters;
@@ -58,21 +59,9 @@ public class BaselineLayout {
 	// then we group proximate clusters together
 	// first get the max and min ts
 	Tuple2<Integer, SnapShot> start = snapshots
-		.max(new Comparator<Tuple2<Integer, SnapShot>>() {
-		    @Override
-		    public int compare(Tuple2<Integer, SnapShot> o1,
-			    Tuple2<Integer, SnapShot> o2) {
-			return o1._1 - o2._1;
-		    }
-		});
+		.max(SnapshotTSComparator.maxComp);
 	Tuple2<Integer, SnapShot> end = snapshots
-		.max(new Comparator<Tuple2<Integer, SnapShot>>() {
-		    @Override
-		    public int compare(Tuple2<Integer, SnapShot> o1,
-			    Tuple2<Integer, SnapShot> o2) {
-			return o2._1 - o1._1;
-		    }
-		});
+		.max(SnapshotTSComparator.minComp);
 	int each_par_size = (int) Math.ceil(((end._1 - start._1 + 1) + L
 		* (group_partition - 1))
 		* 1.0 / group_partition);
@@ -91,8 +80,10 @@ public class BaselineLayout {
 		clusters.flatMapToPair(new ObjectTemporalMap()).groupByKey().mapValues(new TupleToList());
 	
 	//then for each local patterns, we check whether it is global pattern
-	
 	local_patterns.map(new PatternCheck(object_temporal_list, M, L, G, K));
-	
+	Map<Integer, ArrayList<Pattern>> global_patterns = local_patterns.collectAsMap();
+	for(ArrayList<Pattern> gp : global_patterns.values()) {
+	    System.out.println(gp);
+	}
     }
 }

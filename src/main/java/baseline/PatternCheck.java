@@ -1,8 +1,8 @@
 package baseline;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -35,17 +35,20 @@ public class PatternCheck implements
 	ArrayList<Pattern> result = new ArrayList<>();
 	for (Pattern p : local_pattern) {
 	    // check whether the object list forms a valid pattern
-	    Pattern full_p = formpattern(p);
-	    if (p != null) {
-		result.add(p);
+	    ArrayList<Pattern> full_p = formpattern(p);
+	    if(!full_p.isEmpty()) {
+		result.addAll(full_p);
 	    }
 	}
 	return result;
     }
 
-    private Pattern formpattern(Pattern p) {
+    private ArrayList<Pattern> formpattern(Pattern local_p) {
 	TreeSet<Tuple2<Integer, String>> temporals = new TreeSet<Tuple2<Integer, String>>();
-	Set<Integer> objs = p.getObjectSet();
+	Set<Integer> objs = local_p.getObjectSet();
+	if(objs.size() < M) {
+	    return new ArrayList<Pattern>();
+	}
 	// we create the temporal list of those objs
 	object_temporal_list.aggregate(temporals, new TreeSetSeqOp(objs),
 		combOp);
@@ -58,35 +61,20 @@ public class PatternCheck implements
 	    }
 	    patterns.get(tpl._2).add(tpl._1);
 	}
-	
 	ArrayList<Pattern> results = new ArrayList<>();
 	for(ArrayList<Integer> tps : patterns.values()) {
-	    if(tps.size() >= K) {
-		int pos = 1;
-		int p_start = 0;
-		int prev = 0;
-		Collections.sort(tps);
-		for(; pos < tps.size(); pos++) {
-		    if(tps.get(pos) - tps.get(prev) != 1) {
-			//check gap constraint
-			int delta = tps.get(pos) - tps.get(prev);
-			if(delta  <= G) {
-			    //we can continue to extend;
-			} else {
-			    //check the range p_start, prev
-			    
-			}
-		    }
-		}
+	    ArrayList<ArrayList<Integer>> tpattns = genPattern(tps); 
+	    for(ArrayList<Integer> tp : tpattns) {
+		Pattern pp = new Pattern();
+		pp.insertPattern(objs, tp, tp.get(tp.size() -1));
+		results.add(pp);
 	    }
 	}
-	
-	return null;
+	return results;
     }
 
     private Function2<TreeSet<Tuple2<Integer, String>>, TreeSet<Tuple2<Integer, String>>, TreeSet<Tuple2<Integer, String>>> combOp = new Function2<TreeSet<Tuple2<Integer, String>>, TreeSet<Tuple2<Integer, String>>, TreeSet<Tuple2<Integer, String>>>() {
 	private static final long serialVersionUID = -371201587438434626L;
-
 	// combines to tree set into one
 	@Override
 	public TreeSet<Tuple2<Integer, String>> call(
@@ -96,4 +84,51 @@ public class PatternCheck implements
 	    return v1;
 	}
     };
+
+    public ArrayList<ArrayList<Integer>> genPattern(List<Integer> input) {
+	ArrayList<ArrayList<Integer>> result = new ArrayList<>();
+	ArrayList<ArrayList<Integer>> result2 = new ArrayList<>();
+	int last = 0;
+	ArrayList<Integer> current = new ArrayList<>();
+	current.add(input.get(last));
+	for (int p = 1; p < input.size(); p++) {
+	    if (input.get(p) - input.get(last) == 1) {
+		current.add(input.get(p));
+	    } else {
+		if (current.size() >= L) {
+		    result.add(current);
+		}
+		current = new ArrayList<>();
+		current.add(input.get(p));
+	    }
+	    last = p;
+	}
+	if (current.size() >= L) {
+	    result.add(current);
+	}
+	//at this moment, result only contains the patterns with L-compatible
+	//merge patterns with g-constraint
+	for(int i = result.size() - 1; i>=1; i--) {
+	    ArrayList<Integer> lst = result.get(i);
+	    ArrayList<Integer> prev = result.get(i-1);
+	    if(lst.get(0) - prev.get(prev.size() -1) <=G) {
+		//merge these two;
+		for(Integer ts : lst) {
+		    prev.add(ts);
+		}
+	    } else {
+		//check prev's validity
+		if(lst.size() >= K) {
+		    result2.add(lst);
+		}
+	    }
+	    result.remove(i);
+	}
+	for(ArrayList<Integer> pat : result) {
+	    if(pat.size() >= K) {
+		result2.add(pat);
+	    }
+	}
+	return result2;
+    }
 }

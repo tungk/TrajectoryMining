@@ -5,16 +5,10 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import com.clearspring.analytics.util.Lists;
-
-import model.TemporalCluster;
-import scala.Tuple2;
-import conf.AppProperties;
-
 public class TemporalPruning {
-    private static int K = 8;
-    private static int L = 4;
-    private static int G = 2;
+    private static int K = 5;
+    private static int L = 2;
+    private static int G = 3;
 
     public static Boolean call(List<Integer> a) {
 	boolean valid = true;
@@ -56,54 +50,54 @@ public class TemporalPruning {
 
     public static ArrayList<ArrayList<Integer>> genPattern(List<Integer> input) {
 	ArrayList<ArrayList<Integer>> result = new ArrayList<>();
-	int p_start = 0;
-	int p_prev = 0;
-	int p_consecutive = 1;
-	for (int p_next = 1; p_next < input.size(); p_next++) {
-	    int delta = input.get(p_next) - input.get(p_prev);
-	    System.out.println(p_next + "\t" + delta+"\t"+p_start+"\t"+p_prev+"\t"+p_next+"\t"+p_consecutive );
-	    if (delta == 1) {
-		p_prev = p_next;
-		p_consecutive++;
-		continue;
-	    }
-	    // checking gaps 
-	    if (delta <= G) {
-		// check consecutive
-		if (p_consecutive < L) {
-		    // do nothing;
-		    p_start = p_next;
-		    p_consecutive = 1;
-		} else {
-		    // continue to extend
-		}
-		p_prev = p_next;
-		continue;
+	ArrayList<ArrayList<Integer>> result2 = new ArrayList<>();
+	int last = 0;
+	ArrayList<Integer> current = new ArrayList<>();
+	current.add(input.get(last));
+	for (int p = 1; p < input.size(); p++) {
+	    if (input.get(p) - input.get(last) == 1) {
+		current.add(input.get(p));
 	    } else {
-		// checking whether to output
-		if (p_consecutive < L) {
-		    // do nothing;
-		    p_start = p_next;
-		} else {
-		    ArrayList<Integer> ps = new ArrayList<>();
-		    for (int i = p_start; i <= p_prev; i++) {
-			ps.add(input.get(i));
-		    }
-		    result.add(ps);
+		if (current.size() >= L) {
+		    result.add(current);
 		}
-		p_consecutive = 1;
-		p_prev = p_next;
-		p_start = p_next;
-		continue;
+		current = new ArrayList<>();
+		current.add(input.get(p));
+	    }
+	    last = p;
+	}
+	if (current.size() >= L) {
+	    result.add(current);
+	}
+	//at this moment, result only contains the patterns with L-compatible
+	//merge patterns with g-constraint
+	for(int i = result.size() - 1; i>=1; i--) {
+	    ArrayList<Integer> lst = result.get(i);
+	    ArrayList<Integer> prev = result.get(i-1);
+	    if(lst.get(0) - prev.get(prev.size() -1) <=G) {
+		//merge these two;
+		for(Integer ts : lst) {
+		    prev.add(ts);
+		}
+	    } else {
+		//check prev's validity
+		if(lst.size() >= K) {
+		    result2.add(lst);
+		}
+	    }
+	    result.remove(i);
+	}
+	for(ArrayList<Integer> pat : result) {
+	    if(pat.size() >= K) {
+		result2.add(pat);
 	    }
 	}
-	return result;
+	return result2;
     }
 
     public static void main(String[] args) {
 	List<Integer> input = Arrays
-		.asList(1, 2, 3, 4, 7, 8, 9, 10, 12, 13, 15);
-	// System.out.println(call(input));
+		.asList(1, 2, 3, 4, 7, 8, 9, 13,14,15,16,19,20);
 	System.out.println(genPattern(input));
     }
 }
