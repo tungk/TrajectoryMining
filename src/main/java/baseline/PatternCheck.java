@@ -66,7 +66,7 @@ public class PatternCheck implements
 	    ArrayList<ArrayList<Integer>> tpattns = genPattern(tps); 
 	    for(ArrayList<Integer> tp : tpattns) {
 		Pattern pp = new Pattern();
-		pp.insertPattern(objs, tp, tp.get(tp.size() -1));
+		pp.insertPattern(objs, tp);
 		results.add(pp);
 	    }
 	}

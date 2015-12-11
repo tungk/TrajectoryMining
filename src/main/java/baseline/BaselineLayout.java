@@ -1,7 +1,6 @@
 package baseline;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Map;
 
 import model.Cluster;
@@ -12,8 +11,6 @@ import model.SnapShot;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.function.Function;
-import org.apache.spark.api.java.function.Function2;
 
 import scala.Tuple2;
 import conf.AppProperties;
@@ -62,13 +59,9 @@ public class BaselineLayout {
 		.max(SnapshotTSComparator.maxComp);
 	Tuple2<Integer, SnapShot> end = snapshots
 		.max(SnapshotTSComparator.minComp);
-	int each_par_size = (int) Math.ceil(((end._1 - start._1 + 1) + L
-		* (group_partition - 1))
-		* 1.0 / group_partition);
 	JavaPairRDD<Integer, GroupClusters> groupedCluster = clusters
 		.flatMapToPair(
-			new OverlapPartitioner(start._1, end._1,
-				group_partition, each_par_size)).groupByKey()
+			new OverlapPartitioner(start._1, end._1, group_partition, L)).groupByKey()
 		.mapValues(new ClusterGrouper(8));
 
 	JavaPairRDD<Integer, ArrayList<Pattern>> local_patterns = groupedCluster

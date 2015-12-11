@@ -23,6 +23,17 @@ public class Cluster implements Serializable{
 	ts = sp.getTS();
     }
     
+    /**
+     * This constructor is used for testing purpose, where
+     * we can create a cluster at a specific time sequence;
+     * @param ts
+     */
+    public Cluster(int ts, String id) {
+	context = new SnapShot(ts);
+	this.ts = ts;
+	ID = id;
+    }
+    
     public int getSize() {
 	return oids.size();
     }

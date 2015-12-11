@@ -10,7 +10,7 @@ import model.SnapShot;
 import baseline.LocalCMCMiner;
 
 public class LocalCMCMinerTest {
-    private static int L = 3, K = 3, G = 1, M = 2;
+    private static int L = 2, K = 3, G = 1, M = 2;
     
     public static void main(String[] args) {
 	LocalCMCMiner lcmc = new LocalCMCMiner(M,L,G,K);

@@ -12,5 +12,4 @@ public class TupleFilter implements Function<String, Boolean> {
 	    return true;
 	}
     }
-
 }
