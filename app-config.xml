@@ -5,10 +5,10 @@
 	<entry key="eps">1000</entry>
 	<entry key="minPts">5</entry>
 <!-- The following is to specify the pattern parameters -->
-	<entry key="K">50</entry>
-	<entry key="G">3</entry>
+	<entry key="K">30</entry>
+	<entry key="G">2</entry>
 	<entry key="L">10</entry>
-	<entry key="M">10</entry>
+	<entry key="M">15</entry>
 <!-- The following is to specify the number of group partitions -->
 	<entry key="group_partition">34</entry>
 <!-- The following is to specify Spark parameters-->

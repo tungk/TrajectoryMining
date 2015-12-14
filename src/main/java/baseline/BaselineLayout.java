@@ -66,8 +66,7 @@ public class BaselineLayout {
 
 	JavaPairRDD<Integer, ArrayList<Pattern>> local_patterns = groupedCluster
 		.mapValues(new LocalCMCMiner(M, L, G, K));
-	local_patterns.collect();
-
+//	local_patterns.collect();
 	// we also need to compute the object->temporal list
 	JavaPairRDD<Integer, ArrayList<Tuple2<Integer, String>>> object_temporal_list = 
 		clusters.flatMapToPair(new ObjectTemporalMap()).groupByKey().mapValues(new TupleToList());
