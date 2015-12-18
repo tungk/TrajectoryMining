@@ -2,12 +2,13 @@ package pattern;
 
 import java.util.ArrayList;
 
+import olpartitioned.LocalCMCMiner;
+
 import model.Cluster;
 import model.GroupClusters;
 import model.Pattern;
 import model.SnapShot;
 
-import baseline.LocalCMCMiner;
 
 public class LocalCMCMinerTest {
     private static int L = 2, K = 3, G = 1, M = 2;

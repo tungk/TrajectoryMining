@@ -27,6 +27,17 @@ public class Pattern implements Serializable {
 	tss = new TreeSet<>();
     }
 
+    public Pattern(int[] os, int[] ts) {
+	oids = new HashSet<>();
+	tss = new TreeSet<>();
+	for(int i : os) {
+	    oids.add(i);
+	}
+	for(int t: ts) {
+	    tss.add(t);
+	}
+    }
+
     public int getObjectSize() {
 	return oids.size();
     }
@@ -103,6 +114,10 @@ public class Pattern implements Serializable {
     @Override
     public int hashCode() {
 	return oids.hashCode();
+    }
+
+    public int getEarlyTS() {
+	return tss.first();
     }
 
 }

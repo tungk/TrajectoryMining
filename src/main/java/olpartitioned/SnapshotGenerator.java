@@ -1,4 +1,4 @@
-package baseline;
+package olpartitioned;
 
 import model.Point;
 import model.SnapShot;

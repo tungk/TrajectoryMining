@@ -10,6 +10,11 @@ import java.util.Set;
 import model.Cluster;
 import model.Pattern;
 
+import olpartitioned.DBSCANWrapper;
+import olpartitioned.SnapshotCombinator;
+import olpartitioned.SnapshotGenerator;
+import olpartitioned.TupleFilter;
+
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -17,10 +22,6 @@ import org.apache.spark.api.java.JavaSparkContext;
 import util.SetCompResult;
 import util.SetOps;
 
-import baseline.DBSCANWrapper;
-import baseline.SnapshotCombinator;
-import baseline.SnapshotGenerator;
-import baseline.TupleFilter;
 
 import conf.AppProperties;
 

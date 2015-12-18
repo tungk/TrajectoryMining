@@ -1,13 +1,13 @@
-package baseline;
+package baselineTest;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import olpartitioned.BaselineLayout;
+
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 
 import conf.AppProperties;
 
-public class MainApp {
+public class BaseLine {
     public static void main(String[] args) {
 	SparkConf conf = new SparkConf();
 	if (!conf.contains("spark.app.name")) {
@@ -16,14 +16,12 @@ public class MainApp {
 	if (!conf.contains("spark.master")) {
 	    conf = conf.setMaster(AppProperties.getProperty("spark_master"));
 	}
-	Logger.getLogger("org").setLevel(Level.OFF);
-	Logger.getLogger("aka").setLevel(Level.OFF);
 	JavaSparkContext context = new JavaSparkContext(conf);
 	int hdfs_read_partitions = Integer.parseInt(AppProperties
 		.getProperty("hdfs_read_partitions"));
 	String hdfs_input = AppProperties.getProperty("hdfs_input");
-	Layout lo = new Layout(context.textFile(hdfs_input, hdfs_read_partitions));
-	lo.runLogic();
+	BaselineLayout bl = new BaselineLayout(context.textFile(hdfs_input, hdfs_read_partitions));
+	bl.runLogic();
 	context.close();
     }
 }

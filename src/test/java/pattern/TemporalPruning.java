@@ -95,9 +95,31 @@ public class TemporalPruning {
 	return result2;
     }
 
+    public static boolean isLGValidTemporal(List<Integer> temporal, int L, int G) {
+  	//for every consecutive part, check whether it is l-consecutive
+  	int consecutive = 1;
+  	for(int i = 1; i < temporal.size(); i++) {
+  	    int delta = temporal.get(i) - temporal.get(i-1);
+  	    if(delta == 1) {
+  		consecutive ++;
+  		continue;
+  	    } else if (temporal.get(i) - temporal.get(i-1) <= G) {
+  		if(consecutive >= L) {
+  		    consecutive = 1;
+  		    continue;
+  		} else {
+  		    return false;
+  		}
+  	    } else {
+  		return false;
+  	    }
+  	}
+  	return true;
+      }
+    
     public static void main(String[] args) {
 	List<Integer> input = Arrays
-		.asList(1, 2, 3, 4, 7, 8, 9, 13,14,15,16,19,20);
-	System.out.println(genPattern(input));
+		.asList(1, 2, 3, 4, 7, 8, 9, 12,13,14,15,16);
+	System.out.println(isLGValidTemporal(input, 3, 2));
     }
 }
