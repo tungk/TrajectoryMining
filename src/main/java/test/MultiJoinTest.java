@@ -37,20 +37,20 @@ public class MultiJoinTest {
 	// hdfs_read_partitions));
 	// bl.runLogic();
 	// context.close();
-	int input_size = 16777216;
-//	int input_size = 2048;
+	int input_size = Integer.parseInt(AppProperties.getProperty("multi_join_test"));
 	ArrayList<Long> input = new ArrayList<Long>();
 	Random r = new Random();
 	for (int i = 1; i <= input_size; i++) {
 	    input.add((long) r.nextInt(i));
 	}
 
-	JavaRDD<Long> inputRDD = context.parallelize(input, 64);
+	JavaRDD<Long> inputRDD = context.parallelize(input);
 	JavaPairRDD<Long, Long> pairedRDD = inputRDD.mapToPair(MAPTOPAIR);
 	long count = pairedRDD.count();
 	while (count > 1) {
 	    pairedRDD = pairedRDD.mapToPair(STAGE_MAP).reduceByKey(STAGE_REDUCE);
 	    count = pairedRDD.count();
+	    System.out.println("Round: " + count);
 	}
 	for (Tuple2<Long, Long> t : pairedRDD.collect()) {
 	    System.out.println(t);

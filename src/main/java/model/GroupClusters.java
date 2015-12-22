@@ -77,7 +77,7 @@ public class GroupClusters implements Serializable,
 			int ts2 = o2.get(0).getTS();
 			return ts1 - ts2;
 		    }
-		}
+		}  
 	);
     }
 

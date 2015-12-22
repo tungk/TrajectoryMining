@@ -28,18 +28,25 @@ import util.TemporalVerification;
 
 import conf.AppProperties;
 
-public class Layout implements Serializable{
+public class Layout implements Serializable {
     private static final long serialVersionUID = 8212869092328285729L;
     private JavaRDD<String> inputs;
-//    private final int K, L, M, G, eps, minPts;
-    private final static int K = Integer.parseInt(AppProperties.getProperty("K"));
-    private final static int L = Integer.parseInt(AppProperties.getProperty("L"));
-    private final static int M = Integer.parseInt(AppProperties.getProperty("M"));
-    private final static int G = Integer.parseInt(AppProperties.getProperty("G"));
-    private final static int eps = Integer.parseInt(AppProperties.getProperty("eps"));
-    private final static int minPts = Integer.parseInt(AppProperties.getProperty("minPts"));
-    private final static int snapshot_partitions = Integer.parseInt(AppProperties
-		.getProperty("snapshot_partitions"));
+    // private final int K, L, M, G, eps, minPts;
+    private final static int K = Integer.parseInt(AppProperties
+	    .getProperty("K"));
+    private final static int L = Integer.parseInt(AppProperties
+	    .getProperty("L"));
+    private final static int M = Integer.parseInt(AppProperties
+	    .getProperty("M"));
+    private final static int G = Integer.parseInt(AppProperties
+	    .getProperty("G"));
+    private final static int eps = Integer.parseInt(AppProperties
+	    .getProperty("eps"));
+    private final static int minPts = Integer.parseInt(AppProperties
+	    .getProperty("minPts"));
+    private final static int snapshot_partitions = Integer
+	    .parseInt(AppProperties.getProperty("snapshot_partitions"));
+
     public Layout(JavaRDD<String> textFile) {
 	inputs = textFile;
     }
@@ -61,6 +68,7 @@ public class Layout implements Serializable{
 	JavaPairRDD<Integer, ArrayList<Pattern>> local_patterns = clusters
 		.mapToPair(new PairFunction<ArrayList<Cluster>, Integer, ArrayList<Pattern>>() {
 		    private static final long serialVersionUID = 293055163608994485L;
+
 		    @Override
 		    public Tuple2<Integer, ArrayList<Pattern>> call(
 			    ArrayList<Cluster> t) throws Exception {
@@ -78,60 +86,58 @@ public class Layout implements Serializable{
 	System.out.println("Join Starts:");
 	long count = local_patterns.count();
 	while (count > 1) {
-	    System.out.println("\tRound:\t"+count);
-	    local_patterns = local_patterns
-		    .mapToPair(STAGE_MAP)
-		    .reduceByKey(STAGE_REDUCE);
+	    System.out.println("\tRound:\t" + count);
+	    local_patterns = local_patterns.mapToPair(STAGE_MAP).reduceByKey(
+		    STAGE_REDUCE);
 	    count = local_patterns.count();
 	}
 	System.out.println("Filter Starts");
 	List<Pattern> final_patterns = local_patterns
-		.flatMap(new FlatMapFunction<Tuple2<Integer, ArrayList<Pattern>>, Pattern>() {
-		    private static final long serialVersionUID = -5043868653091837942L;
-		    @Override
-		    public Iterable<Pattern> call(
-			    Tuple2<Integer, ArrayList<Pattern>> t)
-			    throws Exception {
-			return t._2;
-		    }
-		}).filter(new Function<Pattern, Boolean>(){
+		.flatMap(
+			new FlatMapFunction<Tuple2<Integer, ArrayList<Pattern>>, Pattern>() {
+			    private static final long serialVersionUID = -5043868653091837942L;
+
+			    @Override
+			    public Iterable<Pattern> call(
+				    Tuple2<Integer, ArrayList<Pattern>> t)
+				    throws Exception {
+				return t._2;
+			    }
+			}).filter(new Function<Pattern, Boolean>() {
 		    private static final long serialVersionUID = -2043561468644039317L;
 
 		    @Override
 		    public Boolean call(Pattern v1) throws Exception {
-			if(v1.getObjectSize() < K) {
+			if (v1.getObjectSize() < K) {
 			    return false;
 			} else {
-			    return TemporalVerification.isValidTemporal(v1.getTimeSet(), K, L, G);
+			    return TemporalVerification.isValidTemporal(
+				    v1.getTimeSet(), K, L, G);
 			}
 		    }
 		}).collect();
 	System.out.println("Filter Ends");
 	System.out.println(final_patterns.size());
-	for(Pattern p : final_patterns) {
+	for (Pattern p : final_patterns) {
 	    System.out.println(p);
 	}
     }
-    
-    private static PairFunction<Tuple2<Integer, ArrayList<Pattern>>, Integer, ArrayList<Pattern>> STAGE_MAP
-    = 	    new PairFunction<Tuple2<Integer, ArrayList<Pattern>>, Integer, ArrayList<Pattern>>() {
+
+    private static PairFunction<Tuple2<Integer, ArrayList<Pattern>>, Integer, ArrayList<Pattern>> STAGE_MAP = new PairFunction<Tuple2<Integer, ArrayList<Pattern>>, Integer, ArrayList<Pattern>>() {
 	private static final long serialVersionUID = 2997493391442263325L;
+
 	@Override
 	public Tuple2<Integer, ArrayList<Pattern>> call(
-		Tuple2<Integer, ArrayList<Pattern>> t)
-		throws Exception {
-	    return new Tuple2<Integer, ArrayList<Pattern>>(
-		    t._1 / 2, t._2);
+		Tuple2<Integer, ArrayList<Pattern>> t) throws Exception {
+	    return new Tuple2<Integer, ArrayList<Pattern>>(t._1 / 2, t._2);
 	}
     };
-    
-    private static Function2<ArrayList<Pattern>, ArrayList<Pattern>, ArrayList<Pattern>> STAGE_REDUCE
-    = new Function2<ArrayList<Pattern>, ArrayList<Pattern>, ArrayList<Pattern>>() {
+
+    private static Function2<ArrayList<Pattern>, ArrayList<Pattern>, ArrayList<Pattern>> STAGE_REDUCE = new Function2<ArrayList<Pattern>, ArrayList<Pattern>, ArrayList<Pattern>>() {
 	private static final long serialVersionUID = 6875935653511633616L;
 
 	@Override
-	public ArrayList<Pattern> call(
-		ArrayList<Pattern> v1,
+	public ArrayList<Pattern> call(ArrayList<Pattern> v1,
 		ArrayList<Pattern> v2) throws Exception {
 	    ArrayList<Pattern> result = new ArrayList<>();
 	    HashSet<Pattern> excluded = new HashSet<Pattern>();
@@ -140,18 +146,15 @@ public class Layout implements Serializable{
 	    // patterns that has is far beyond gap G
 	    for (Pattern p1 : v1) {
 		for (Pattern p2 : v2) {
-		    if (p1.getEarlyTS()
-			    - p2.getLatestTS() > G) {
+		    if (p1.getEarlyTS() - p2.getLatestTS() > G) {
 			continue;
 		    }
-		    if (p2.getEarlyTS()
-			    - p1.getLatestTS() > G) {
+		    if (p2.getEarlyTS() - p1.getLatestTS() > G) {
 			continue; // no need to consider
 		    }
 		    Set<Integer> s1 = p1.getObjectSet();
 		    Set<Integer> s2 = p2.getObjectSet();
-		    SetCompResult scr = SetOps
-			    .setCompare(s1, s2);
+		    SetCompResult scr = SetOps.setCompare(s1, s2);
 		    // check common size
 		    if (scr.getCommonsSize() < M) {
 			// then the only pattern is p1
@@ -188,38 +191,51 @@ public class Layout implements Serializable{
 		    result.add(newp);
 		}
 	    }
-	    
-	    //prune out-of-ranged patterns
+
+	    // prune out-of-ranged patterns
 	    int p1_latest = -1, p1_earliest = Integer.MAX_VALUE;
 	    int p2_latest = -1, p2_earliest = Integer.MAX_VALUE;
-	    for(Pattern p1 : v1) {
-		if(p1.getLatestTS() > p1_latest) {
+	    for (Pattern p1 : v1) {
+		if (p1.getLatestTS() > p1_latest) {
 		    p1_latest = p1.getLatestTS();
-		} 
-		if(p1.getEarlyTS() < p1_earliest) {
+		}
+		if (p1.getEarlyTS() < p1_earliest) {
 		    p1_earliest = p1.getEarlyTS();
 		}
 	    }
-	    for(Pattern p2 : v2) {
-		if(p2.getLatestTS() > p2_latest) {
+	    for (Pattern p2 : v2) {
+		if (p2.getLatestTS() > p2_latest) {
 		    p2_latest = p2.getLatestTS();
-		} 
-		if(p2.getEarlyTS() < p2_earliest) {
+		}
+		if (p2.getEarlyTS() < p2_earliest) {
 		    p2_earliest = p2.getEarlyTS();
 		}
 	    }
-	    int earliest = p1_earliest > p2_earliest ?  p2_earliest : p1_earliest;
+	    int earliest = p1_earliest > p2_earliest ? p2_earliest
+		    : p1_earliest;
 	    int latest = p1_latest > p2_latest ? p1_latest : p2_latest;
-	    for(Pattern p1 : v1) {
-		if(p1.getEarlyTS() - earliest > G
-		&& latest -  p1.getLatestTS() > G) {
+	    for (Pattern p1 : v1) {
+		if (p1.getEarlyTS() - earliest > G
+			&& latest - p1.getLatestTS() > G) {
 		    excluded.add(p1);
 		}
+		if (p1.getEarlyTS() - earliest != 0
+			|| latest - p1.getLatestTS() != 0) {
+		    if (p1.getTimeSize() < L) {
+			excluded.add(p1);
+		    }
+		}
 	    }
-	    for(Pattern p2 : v2) {
-		if(p2.getEarlyTS() - earliest > G
-		&& latest -  p2.getLatestTS() > G) {
+	    for (Pattern p2 : v2) {
+		if (p2.getEarlyTS() - earliest > G
+			&& latest - p2.getLatestTS() > G) {
 		    excluded.add(p2);
+		}
+		if (p2.getEarlyTS() - earliest != 0
+			|| latest - p2.getLatestTS() != 0) {
+		    if (p2.getTimeSize() < L) {
+			excluded.add(p2);
+		    }
 		}
 	    }
 	    // for each old patterns, determine whether
@@ -227,21 +243,17 @@ public class Layout implements Serializable{
 	    // p2
 	    // this can prune many unnecessary patterns
 	    for (Pattern p1 : v1) {
-		if (!excluded.contains(p1)) {
-		    // if
-		    // (TemporalVerification.isLGValidTemporal(p1.getTimeSet(),
-		    // L, G)) {
-		    result.add(p1);
-		    // }
+		if (p1.getObjectSize() >= M) {
+		    if (!excluded.contains(p1)) {
+			result.add(p1);
+		    }
 		}
 	    }
 	    for (Pattern p2 : v2) {
-		if (!excluded.contains(p2)) {
-		    // if
-		    // (TemporalVerification.isLGValidTemporal(p2.getTimeSet(),
-		    // L, G)) {
-		    result.add(p2);
-		    // }
+		if (p2.getObjectSize() >= M) {
+		    if (!excluded.contains(p2)) {
+			result.add(p2);
+		    }
 		}
 	    }
 	    return result;

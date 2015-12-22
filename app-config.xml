@@ -20,4 +20,6 @@
 <!-- The following is to specify application related partitions -->
 	<entry key="hdfs_read_partitions">2</entry>
 	<entry key="snapshot_partitions">17</entry>
+<!--The following is for multi-joint-test -->
+    <entry key="multi_join_test">1024</entry>
 </properties>
