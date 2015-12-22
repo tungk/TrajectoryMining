@@ -17,7 +17,8 @@ public class Pattern implements Serializable {
     private static final long serialVersionUID = -2625008459728444860L;
     private HashSet<Integer> oids;
     private TreeSet<Integer> tss; // tss is thus ordered
-
+    private int start, end; // the [start,end] interval of the given pattern
+    
     /**
      * create a new placeholder for pattern which consists of two sets OIDs for
      * objects and TSS for time sequence
@@ -25,16 +26,25 @@ public class Pattern implements Serializable {
     public Pattern() {
 	oids = new HashSet<>();
 	tss = new TreeSet<>();
+	start = Integer.MAX_VALUE;
+	end = Integer.MIN_VALUE;
     }
-
+    
+    /**
+     * this constructor is used for test purpose
+     * @param os
+     * @param ts
+     */
     public Pattern(int[] os, int[] ts) {
 	oids = new HashSet<>();
 	tss = new TreeSet<>();
+	start = Integer.MAX_VALUE;
+	end = Integer.MIN_VALUE;
 	for(int i : os) {
 	    oids.add(i);
 	}
 	for(int t: ts) {
-	    tss.add(t);
+	   insertTime(t);
 	}
     }
 
@@ -49,18 +59,24 @@ public class Pattern implements Serializable {
     public void insertObject(int oid) {
 	oids.add(oid);
     }
-
+    
     public void insertTime(int ts) {
+	if(start > ts) {
+	    start = ts;
+	}
+	if(end < ts) {
+	    end = ts;
+	}
 	tss.add(ts);
     }
 
     @Override
     public String toString() {
-	return "[<" + oids + ">,<" + tss + ">]";
+	return "["+start+","+ end + "]|<" + oids + ">,<" + tss + ">|";
     }
 
     /**
-     * insert a set of objects, attach a timestamp
+     * insert a set of objects
      * @param objects
      */
     public void insertObjects(Set<Integer> objects) {
@@ -69,14 +85,13 @@ public class Pattern implements Serializable {
 
     /**
      * insert object set and time set into the pattern
-     * 
      * @param objects
      * @param times
      */
     public void insertPattern(Set<Integer> objects, Iterable<Integer> times) {
 	oids.addAll(objects);
 	for (Integer t_sequence : times) {
-	    tss.add(t_sequence);
+	    this.insertTime(t_sequence);
 	}
     }
 
@@ -99,7 +114,8 @@ public class Pattern implements Serializable {
      * @return
      */
     public int getLatestTS() {
-	return tss.last();
+	assert tss.last() == end;
+	return end;
     }
 
     @Override
@@ -117,7 +133,8 @@ public class Pattern implements Serializable {
     }
 
     public int getEarlyTS() {
-	return tss.first();
+	assert tss.first() == start;
+	return start;
     }
 
 }

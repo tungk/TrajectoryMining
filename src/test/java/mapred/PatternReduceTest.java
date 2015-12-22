@@ -27,7 +27,6 @@ public class PatternReduceTest {
 
     public Function2<ArrayList<Pattern>, ArrayList<Pattern>, ArrayList<Pattern>> PAIRREDUCE = new Function2<ArrayList<Pattern>, ArrayList<Pattern>, ArrayList<Pattern>>() {
 	private static final long serialVersionUID = 3382527097155623720L;
-
 	// merge the two local patterns
 	@Override
 	public ArrayList<Pattern> call(ArrayList<Pattern> v1,
