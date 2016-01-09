@@ -26,27 +26,10 @@ import util.SetCompResult;
 import util.SetOps;
 import util.TemporalVerification;
 
-import conf.AppProperties;
 
 public class Layout implements Serializable {
     private static final long serialVersionUID = 8212869092328285729L;
     private JavaRDD<String> inputs;
-    // private final int K, L, M, G, eps, minPts;
-    private final static int K = Integer.parseInt(AppProperties
-	    .getProperty("K"));
-    private final static int L = Integer.parseInt(AppProperties
-	    .getProperty("L"));
-    private final static int M = Integer.parseInt(AppProperties
-	    .getProperty("M"));
-    private final static int G = Integer.parseInt(AppProperties
-	    .getProperty("G"));
-    private final static int eps = Integer.parseInt(AppProperties
-	    .getProperty("eps"));
-    private final static int minPts = Integer.parseInt(AppProperties
-	    .getProperty("minPts"));
-    private final static int snapshot_partitions = Integer
-	    .parseInt(AppProperties.getProperty("snapshot_partitions"));
-
     public Layout(JavaRDD<String> textFile) {
 	inputs = textFile;
     }
@@ -54,7 +37,7 @@ public class Layout implements Serializable {
     private JavaPairRDD<Integer, SnapShot> genSnapshots() {
 	return inputs.filter(new TupleFilter())
 		.mapToPair(new SnapshotGenerator())
-		.reduceByKey(new SnapshotCombinator(), snapshot_partitions);
+		.reduceByKey(new SnapshotCombinator(), conf.Constants.SNAPSHOT_PARTITIONS);
     }
 
     public void runLogic() {
@@ -63,7 +46,7 @@ public class Layout implements Serializable {
 	JavaPairRDD<Integer, SnapShot> snapshots = genSnapshots();
 	System.out.println("Snapshots Ready");
 	JavaRDD<ArrayList<Cluster>> clusters = snapshots.map(new DBSCANWrapper(
-		eps, minPts));
+		conf.Constants.EPS, conf.Constants.MINPTS));
 	System.out.println("DBSCAN Ready");
 	JavaPairRDD<Integer, ArrayList<Pattern>> local_patterns = clusters
 		.mapToPair(new PairFunction<ArrayList<Cluster>, Integer, ArrayList<Pattern>>() {
@@ -108,11 +91,11 @@ public class Layout implements Serializable {
 
 		    @Override
 		    public Boolean call(Pattern v1) throws Exception {
-			if (v1.getObjectSize() < K) {
+			if (v1.getObjectSize() < conf.Constants.K) {
 			    return false;
 			} else {
 			    return TemporalVerification.isValidTemporal(
-				    v1.getTimeSet(), K, L, G);
+				    v1.getTimeSet(), conf.Constants.K, conf.Constants.L, conf.Constants.G);
 			}
 		    }
 		}).collect();
@@ -146,17 +129,17 @@ public class Layout implements Serializable {
 	    // patterns that has is far beyond gap G
 	    for (Pattern p1 : v1) {
 		for (Pattern p2 : v2) {
-		    if (p1.getEarlyTS() - p2.getLatestTS() > G) {
+		    if (p1.getEarlyTS() - p2.getLatestTS() > conf.Constants.G) {
 			continue;
 		    }
-		    if (p2.getEarlyTS() - p1.getLatestTS() > G) {
+		    if (p2.getEarlyTS() - p1.getLatestTS() > conf.Constants.G) {
 			continue; // no need to consider
 		    }
 		    Set<Integer> s1 = p1.getObjectSet();
 		    Set<Integer> s2 = p2.getObjectSet();
 		    SetCompResult scr = SetOps.setCompare(s1, s2);
 		    // check common size
-		    if (scr.getCommonsSize() < M) {
+		    if (scr.getCommonsSize() < conf.Constants.M) {
 			// then the only pattern is p1
 			// and p2
 			continue;
@@ -215,25 +198,25 @@ public class Layout implements Serializable {
 		    : p1_earliest;
 	    int latest = p1_latest > p2_latest ? p1_latest : p2_latest;
 	    for (Pattern p1 : v1) {
-		if (p1.getEarlyTS() - earliest > G
-			&& latest - p1.getLatestTS() > G) {
+		if (p1.getEarlyTS() - earliest > conf.Constants.G
+			&& latest - p1.getLatestTS() > conf.Constants.G) {
 		    excluded.add(p1);
 		}
 		if (p1.getEarlyTS() - earliest != 0
 			|| latest - p1.getLatestTS() != 0) {
-		    if (p1.getTimeSize() < L) {
+		    if (p1.getTimeSize() < conf.Constants.L) {
 			excluded.add(p1);
 		    }
 		}
 	    }
 	    for (Pattern p2 : v2) {
-		if (p2.getEarlyTS() - earliest > G
-			&& latest - p2.getLatestTS() > G) {
+		if (p2.getEarlyTS() - earliest > conf.Constants.G
+			&& latest - p2.getLatestTS() > conf.Constants.G) {
 		    excluded.add(p2);
 		}
 		if (p2.getEarlyTS() - earliest != 0
 			|| latest - p2.getLatestTS() != 0) {
-		    if (p2.getTimeSize() < L) {
+		    if (p2.getTimeSize() < conf.Constants.L) {
 			excluded.add(p2);
 		    }
 		}
@@ -243,14 +226,14 @@ public class Layout implements Serializable {
 	    // p2
 	    // this can prune many unnecessary patterns
 	    for (Pattern p1 : v1) {
-		if (p1.getObjectSize() >= M) {
+		if (p1.getObjectSize() >= conf.Constants.M) {
 		    if (!excluded.contains(p1)) {
 			result.add(p1);
 		    }
 		}
 	    }
 	    for (Pattern p2 : v2) {
-		if (p2.getObjectSize() >= M) {
+		if (p2.getObjectSize() >= conf.Constants.M) {
 		    if (!excluded.contains(p2)) {
 			result.add(p2);
 		    }
