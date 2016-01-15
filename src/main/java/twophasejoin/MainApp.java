@@ -6,7 +6,13 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 
 import conf.AppProperties;
-
+/**
+ * the two phase join is a baseline algorithm to scan for the candidates 
+ * and filter later, therefore no CMC method is required
+ * 
+ * @author a0048267
+ *
+ */
 public class MainApp {
     public static void main(String[] args) {
    	SparkConf conf = new SparkConf();

@@ -160,7 +160,7 @@ public class Layout implements Serializable {
 			excluded.add(p2);
 			excluded.add(p1);
 		    }
-		    // common size greater than M
+		     // common size greater than M
 		    // create a new pattern based on the
 		    // common size
 		    Pattern newp = new Pattern();

@@ -1,6 +1,8 @@
 package twophasejoin;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import model.Cluster;
@@ -12,7 +14,9 @@ import olpartitioned.TupleFilter;
 
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.PairFlatMapFunction;
 import org.apache.spark.api.java.function.PairFunction;
 
 import conf.AppProperties;
@@ -63,18 +67,50 @@ public class TwoPhaseLayout {
 		.mapToPair(new SnapshotGenerator())
 		.reduceByKey(new SnapshotCombinator(),
 			conf.Constants.SNAPSHOT_PARTITIONS);
-
-	// we collect the set of TS's
-	List<Integer> TS_SET = TS_CLUSTERS.map(COUNT_KEYS).collect();
-
 	// DBSCAN
-	JavaRDD<ArrayList<Cluster>> CLUSTERS = TS_CLUSTERS
-		.map(new DBSCANWrapper(conf.Constants.EPS,
-			conf.Constants.MINPTS));
+	JavaRDD<ArrayList<Cluster>> CLUSTERS = TS_CLUSTERS.map(
+		new DBSCANWrapper(conf.Constants.EPS, conf.Constants.MINPTS))
+		.filter(new Function<ArrayList<Cluster>, Boolean>() {
+		    private static final long serialVersionUID = -7032753424628524015L;
+		    @Override
+		    public Boolean call(ArrayList<Cluster> v1) throws Exception {
+			return v1.size() > m;
+		    }
+		});
+	// each cluster is a candidate
+	// we group clusters by key
+	CLUSTERS.flatMapToPair(
+		new PairFlatMapFunction<ArrayList<Cluster>, Cluster, Integer>() {
+		    private static final long serialVersionUID = -3424090995370901210L;
+		    @Override
+		    public Iterable<Tuple2<Cluster, Integer>> call(
+			    ArrayList<Cluster> t) throws Exception {
+			ArrayList<Tuple2<Cluster, Integer>> result = new ArrayList<>();
+			for (Cluster c : t) {
+			    result.add(new Tuple2<Cluster, Integer>(c, c
+				    .getTS()));
+			}
+			return result;
+		    }
+		})
+		.groupByKey()
+		.mapValues(
+			new Function<Iterable<Integer>, ArrayList<ArrayList<Integer>>>() {
+			    private static final long serialVersionUID = -7245979451658206130L;
 
-	CLUSTERS.mapToPair(SPLIT_PAIR)
-		.flatMapToPair(new SnapShotScatter(TS_SET)).groupByKey()
-		.mapValues(new CMCMethod(k, l, m, g));
-
+			    @Override
+			    public ArrayList<ArrayList<Integer>> call(
+				    Iterable<Integer> v1) throws Exception {
+				ArrayList<Integer> input = new ArrayList<>();
+				// add v1 to input set;
+				for (Integer i : v1) {
+				    input.add(i);
+				}
+				// sort input
+				Collections.sort(input);
+				return GenValidTemporal
+					.genValid(input, l, k, g);
+			    }
+			}); // no need to filter on the empty ones
     }
 }

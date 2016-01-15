@@ -32,5 +32,4 @@ public class SnapShotScatter implements PairFlatMapFunction<Tuple2<Integer, Arra
 	}
 	return result;
     }
-    
 }
