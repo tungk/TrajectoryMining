@@ -1,6 +1,7 @@
 package model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -55,6 +56,10 @@ public class Cluster implements Serializable{
 	}
     }
     
+    public SnapShot getContext() {
+	return context;
+    }
+    
     public int getTS() {
 	return ts;
     }
@@ -70,5 +75,9 @@ public class Cluster implements Serializable{
     @Override
     public String toString() {
 	return  "<"+ID+":"+ ts + "\t" + oids.toString() +">";
+    }
+
+    public void addAllObjects(ArrayList<Integer> combination) {
+	oids.addAll(combination);
     }
 }

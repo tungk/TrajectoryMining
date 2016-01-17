@@ -15,9 +15,7 @@ public class CombinationGenerator <T> {
 	}
 	T element = superset.get(indx);
 	current.add(element);
-	
 	genCombination(superset,current, indx+1, M,  solution);
-	//remove this element;
 	current.remove(current.size() -1);
 	genCombination(superset, current, indx+1, M, solution);
     }	
