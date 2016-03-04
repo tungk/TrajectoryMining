@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 public class ClusterCombinator {
+
+    @SuppressWarnings("unchecked")
     public static void genCombination(ArrayList<Integer> superset, 
 	    ArrayList<Integer> current, int indx,
 	    int M, HashSet<ArrayList<Integer>> solution) {

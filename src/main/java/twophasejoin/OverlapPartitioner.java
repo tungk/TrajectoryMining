@@ -28,12 +28,15 @@ public class OverlapPartitioner implements PairFlatMapFunction<ArrayList<Cluster
 	public Iterable<Tuple2<Integer, ArrayList<Cluster>>> call(
 		ArrayList<Cluster> t) throws Exception {
 	    ArrayList<Tuple2<Integer, ArrayList<Cluster>>> results = new ArrayList<>();
+	    if(t.size() == 0) {
+		return results;
+	    }
 	    int ts = t.get(0).getTS();
 	    //find the corresponding group cluster, and emit group-cluster pair
 	    int index = ts / (each_par_size - G);
 	    int remain = ts - index * (each_par_size - G);
 	    int prev_index = -1;
-	    int next_index = -1;
+ 	    int next_index = -1;
 	    if(remain < G) {
 		if(index != 0) {
 		    prev_index = index -1;    

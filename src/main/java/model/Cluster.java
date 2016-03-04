@@ -33,6 +33,14 @@ public class Cluster implements Serializable{
 	context = new SnapShot(ts);
 	this.ts = ts;
 	ID = id;
+	oids = new HashSet<>();
+    }
+    
+    public Cluster(int ts, String id, int[] oids) {
+	this(ts,id);
+	for(int i : oids) {
+	    this.oids.add(i);
+	}
     }
     
     public int getSize() {

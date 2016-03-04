@@ -23,7 +23,7 @@ public class CombinationGenerator <T> {
     public static void main(String[] args) {
 	ArrayList<Integer> superset =
 		new ArrayList<>(Arrays.asList(1,2,3,4,5));
-	CombinationGenerator<Integer> cg = new CombinationGenerator<>();
+	CombinationGenerator<Integer> cg = new CombinationGenerator<	>();
 	HashSet<ArrayList<Integer>> solutions = new HashSet<>();
 	cg.genCombination(superset, new ArrayList<Integer>(), 0, 3, solutions);
 	System.out.println(solutions);
