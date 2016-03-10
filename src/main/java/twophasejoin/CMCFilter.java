@@ -79,6 +79,7 @@ public class CMCFilter implements
 		    result.add(c);
 		}
 	    }
+	    
 	}
 	return result;
     }
