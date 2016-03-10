@@ -47,6 +47,19 @@ public class Pattern implements Serializable {
 	   insertTime(t);
 	}
     }
+    
+    public Pattern(Iterable<Integer> os, Iterable<Integer> ts) {
+	oids = new HashSet<Integer>();
+	tss = new TreeSet<>();
+	start = Integer.MAX_VALUE;
+	end = Integer.MIN_VALUE;
+	for(int i : os) {
+	    oids.add(i);
+	}
+	for(int t: ts) {
+	   insertTime(t);
+	}
+    }
 
     public int getObjectSize() {
 	return oids.size();
