@@ -51,6 +51,9 @@ public class AppProperties {
 	if (!props.containsKey("M")) {
 	    props.setProperty("M", "10");
 	}
+	if (!props.contains("kforward_partitions")) {
+	    props.setProperty("kforward_partitions", "23");
+	}
     }
 
     public static String getProperty(String prop_name) {
