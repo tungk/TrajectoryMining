@@ -12,7 +12,7 @@ import scala.Tuple2;
  *
  */
 public class KForwardPartitioner implements
-	PairFlatMapFunction<SnapshotCluster, Integer, SnapshotCluster> {
+	PairFlatMapFunction<ArrayList<SimpleCluster>, Integer, ArrayList<SimpleCluster>> {
     private static final long serialVersionUID = -5332024402601915234L;
 
     private int overlaps;
@@ -27,13 +27,13 @@ public class KForwardPartitioner implements
     
     
     @Override
-    public Iterable<Tuple2<Integer, SnapshotCluster>> call(SnapshotCluster t)
+    public Iterable<Tuple2<Integer, ArrayList<SimpleCluster>>> call(ArrayList<SimpleCluster> t)
 	    throws Exception {
-	ArrayList<Tuple2<Integer, SnapshotCluster>> tmp = new ArrayList<>();
-	int time = t.getTS();
+	ArrayList<Tuple2<Integer, ArrayList<SimpleCluster>>> tmp = new ArrayList<>();
+	int time = t.get(0).getTS();
 	ArrayList<Integer> keys = computePartitionID(time);
 	for(int key : keys) {
-	    tmp.add(new Tuple2<Integer, SnapshotCluster>(key, t));
+	    tmp.add(new Tuple2<Integer, ArrayList<SimpleCluster>>(key, t));
 	}
 	return tmp;
     }
@@ -64,7 +64,7 @@ public class KForwardPartitioner implements
 	int min = 2;
 	int max = 2879;
 	int par = 23;
-	int overlap = 30;
+	int overlap = 25;
 	KForwardPartitioner kfp = new KForwardPartitioner(min, max, overlap, par);
 	System.out.println(kfp.par_length);
 	for(int i = min; i <= max; i++) {

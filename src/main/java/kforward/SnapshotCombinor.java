@@ -6,7 +6,6 @@ import model.SnapShot;
 
 public class SnapshotCombinor
 	implements Function2<SnapShot, SnapShot, SnapShot> {
-
     private static final long serialVersionUID = -3440630456333492120L;
 
     @Override
