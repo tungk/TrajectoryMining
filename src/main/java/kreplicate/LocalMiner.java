@@ -1,16 +1,19 @@
-package kforward;
+package kreplicate;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import kforward.SetComp.Result;
+import org.apache.spark.api.java.function.Function;
 
-public class LocalMiner implements Serializable{
+import kreplicate.SetComp.Result;
+
+
+public class LocalMiner implements Function<Iterable<ArrayList<SimpleCluster>>,ArrayList<HashSet<Integer>>>{
     private static final long serialVersionUID = 416636556315652980L;
     private int K, M, L, G;
 
@@ -24,9 +27,28 @@ public class LocalMiner implements Serializable{
 
     private ArrayList<ArrayList<SimpleCluster>> input;
 
-    public void setInput(ArrayList<ArrayList<SimpleCluster>> input) {
-	this.input = input;
+    @Override
+    public ArrayList<HashSet<Integer>> call(
+	    Iterable<ArrayList<SimpleCluster>> v1) throws Exception {
+	input = new ArrayList<ArrayList<SimpleCluster>>();
+	Iterator<ArrayList<SimpleCluster>> v1itr = v1.iterator();
+	while(v1itr.hasNext()) {
+	    input.add(v1itr.next()); // seems unnecessary copying action, but we have no choice..
+	}
+	Collections.sort(input, new SerializedComparator<ArrayList<SimpleCluster>>(){
+	    private static final long serialVersionUID = 321716012475853207L;
+	    @Override
+	    public int compare(ArrayList<SimpleCluster> o1,
+		    ArrayList<SimpleCluster> o2) {
+		if(o1.size() == 0 || o2.size() == 0) {
+		   return -1;
+		} else {
+		    return o1.get(0).getTS() - o2.get(0).getTS();
+		}
+	    }});
+	return mining();
     }
+    
 
     public ArrayList<HashSet<Integer>> mining() {
 	ArrayList<HashSet<Integer>> result = new ArrayList<>();
@@ -54,7 +76,6 @@ public class LocalMiner implements Serializable{
 	    // any chances to form a new pattern
 	    for (SimpleCluster cluster : current_snap) {
 		// since clusters are disjoint, checking every candidate
-		boolean create_single_pattern = true;
 		for (int k = 0, can_size = candidates.size(); k < can_size; k++) {
 		    Pattern p = candidates.get(k);
 		    SetComp comp = SetUtils.compareSets(cluster.getObjects(),
@@ -69,8 +90,7 @@ public class LocalMiner implements Serializable{
 			    np.growTemporal(current_ts);
 			    candidates.add(np);
 			}
-			create_single_pattern = (comp.getResult() != Result.EQUAL);
-		    } else if (comp.getResult() == Result.SUB || comp.getResult() == Result.NONE) {
+		    } else if (comp.getResult() == Result.SUB) {
 			Set<Integer> commons = comp.getIntersect();
 			if (commons.size() >= M 
 			&& !subsetOf(obj_index, commons)) {
@@ -78,29 +98,18 @@ public class LocalMiner implements Serializable{
 			    Pattern newp = new Pattern(M, L, K, G);
 			    newp.addObjects(commons);
 			    newp.addTemporals(p.getTstamps());
-			    if (!newp.growTemporal(current_ts)) {
-				newp.clearTemporals();
-				newp.growTemporal(current_ts);
+			    if (newp.growTemporal(current_ts)) {
+				 candidates.add(newp);
 			    }
-			    candidates.add(newp);
 			}
 		    } 
-		}
-		if (create_single_pattern) {
-		    if(!subsetOf(obj_index, cluster.getObjects())) {
-			Pattern newp = new Pattern(M, L, K, G);
-		    	newp.addObjects(cluster.getObjects());
-		    	newp.growTemporal(current_ts); // a single pattern always succeed
-		    	candidates.add(newp);
-		    }
 		}
 	    }
 	    // further remove unqualified patterns
 	    Iterator<Pattern> pitr = candidates.iterator();
 	    while (pitr.hasNext()) {
 		Pattern p = pitr.next();
-		if (current_ts - p.getLatestTS() >= G
-		|| current_ts - p.getEarlistTS() >= 2*K + G) { // checking for expiring, here
+		if (current_ts - p.getLatestTS() >= G) { // checking for expiring, here
 						// we use >=, since in the next
 						// round, every cluster has one
 						// more temporal element, then
@@ -110,19 +119,14 @@ public class LocalMiner implements Serializable{
 			if(!subsetOf(obj_index, p.getObjects())) {
 			    result.add(p.getObjects());
 			    addIndex(obj_index, p.getObjects());
-//			    obj_index.add(p.getObjects());
 			}
-		    } else {
-			// remove the pattern only if it is expired && it is not
-			// valid
-//			obj_index.remove(p.getObjects());
 		    }
 		}
 		if(p.checkFullValidity()) {
 		    if(!subsetOf(obj_index, p.getObjects())) {
 		    //remove the qualified clusters as soon as possible
 			result.add(p.getObjects());
-			 addIndex(obj_index, p.getObjects());
+			addIndex(obj_index, p.getObjects());
 		    	pitr.remove();
 		    }
 		}
@@ -143,10 +147,10 @@ public class LocalMiner implements Serializable{
 	return result;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
 	int K = 5;
-	int L = 1;
-	int G = 5;
+	int L = 2;
+	int G = 3;
 	int M = 3;
 	LocalMiner lm = new LocalMiner(K, M, L, G);
 	ArrayList<ArrayList<SimpleCluster>> input = new ArrayList<>();
@@ -163,55 +167,61 @@ public class LocalMiner implements Serializable{
 	sp1.add(new SimpleCluster(2, Arrays.asList(1, 2, 3)));
 	sp1.add(new SimpleCluster(2, Arrays.asList(4, 5, 6)));
 	sp1.add(new SimpleCluster(2, Arrays.asList(7, 8, 9)));
-	input.add(sp1);
+	
 
 	sp2.add(new SimpleCluster(3, Arrays.asList(1, 2, 3, 4)));
 	sp2.add(new SimpleCluster(3, Arrays.asList(5, 6, 7, 8, 9)));
-	input.add(sp2);
+	
+	
 
 	sp3.add(new SimpleCluster(4, Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9)));
-	input.add(sp3);
+	
 
 	sp4.add(new SimpleCluster(5, Arrays.asList(1, 2, 4)));
 	sp4.add(new SimpleCluster(5, Arrays.asList(3, 5, 6)));
 	sp4.add(new SimpleCluster(5, Arrays.asList(7, 8, 9)));
-	input.add(sp4);
+
 
 	sp5.add(new SimpleCluster(6, Arrays.asList(1, 2, 7, 8, 9)));
 	sp5.add(new SimpleCluster(6, Arrays.asList(4, 5, 6)));
 	sp5.add(new SimpleCluster(6, Arrays.asList(3)));
-	input.add(sp5);
+	
 
 	sp6.add(new SimpleCluster(7, Arrays.asList(1, 2, 3, 4)));
 	sp6.add(new SimpleCluster(7, Arrays.asList(5, 6, 7)));
 	sp6.add(new SimpleCluster(7, Arrays.asList(8, 9)));
-	input.add(sp6);
+	
 
 	sp7.add(new SimpleCluster(8, Arrays.asList(1, 8, 9)));
 	sp7.add(new SimpleCluster(8, Arrays.asList(2, 3, 4)));
 	sp7.add(new SimpleCluster(8, Arrays.asList(5, 6, 7)));
-	input.add(sp7);
+	
 
 	sp8.add(new SimpleCluster(9, Arrays.asList(1, 2, 3, 4)));
 	sp8.add(new SimpleCluster(9, Arrays.asList(5, 6)));
 	sp8.add(new SimpleCluster(9, Arrays.asList(7, 8, 9)));
-	input.add(sp8);
+
 
 	sp9.add(new SimpleCluster(10, Arrays.asList(1, 2, 3)));
 	sp9.add(new SimpleCluster(10, Arrays.asList(4, 5, 6)));
 	sp9.add(new SimpleCluster(10, Arrays.asList(7, 8, 9)));
-	input.add(sp9);
+	
 
 	sp10.add(new SimpleCluster(11, Arrays.asList(1, 2, 3)));
 	sp10.add(new SimpleCluster(11, Arrays.asList(4, 5, 8)));
 	sp10.add(new SimpleCluster(11, Arrays.asList(6, 7, 9)));
-	input.add(sp10);
+	
+	
+	input.add(sp10);input.add(sp5);input.add(sp3);
+	input.add(sp4);input.add(sp2);input.add(sp6);
+	input.add(sp7);input.add(sp8);input.add(sp9);
+	input.add(sp1);
 
 	for (ArrayList<SimpleCluster> in : input) {
 	    System.out.println(in);
 	}
 
-	lm.setInput(input);
+	lm.call(input);
 	ArrayList<HashSet<Integer>> result = lm.mining();
 
 	int index = 0;
@@ -251,4 +261,5 @@ public class LocalMiner implements Serializable{
 	    obj_index.add(objects);
 	}
     }
+
 }

@@ -62,7 +62,7 @@ public class KForwordLayout implements Serializable {
 	// do the k-forward
 	JavaPairRDD<Integer, Iterable<HashSet<Integer>>> candidate_w_duplicate = CLUSTERS
 		.flatMapToPair(
-			new KForwardPartitioner(min_ts, max_ts, 2 * K + G, SYS_PARTITIONS))
+			new KForwardPartitioner(min_ts, max_ts, K, SYS_PARTITIONS))
 		.groupByKey()
 		.mapValues(new LocalPattern(L, K, M, G))
 		.mapValues(
@@ -80,13 +80,3 @@ public class KForwordLayout implements Serializable {
 	return candidate_w_duplicate;
     }
 }
-
-// class SerialSnapshotClusterComp implements Comparator<SnapshotCluster>,
-// Serializable {
-// private static final long serialVersionUID = 2433375185377882805L;
-//
-// @Override
-// public int compare(SnapshotCluster o1, SnapshotCluster o2) {
-// return o1.getTS() - o2.getTS();
-// }
-// }
