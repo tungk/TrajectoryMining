@@ -1,10 +1,10 @@
-package kforward;
+package cluster;
 
 import java.util.ArrayList;
 
-import model.SimpleCluster;
 import model.SnapShot;
 import model.SnapshotClusters;
+import model.SimpleCluster;
 
 import org.apache.spark.api.java.function.Function;
 
@@ -26,7 +26,6 @@ public class DBSCANWrapper implements Function<Tuple2<Integer, SnapShot>,  Snaps
 	    throws Exception {
 	    DBSCANClustering dbc = new DBSCANClustering(eps, minPts, v1._2);
 	    ArrayList<SimpleCluster> clusters = dbc.cluster();
-	    //TODO:: optimize in the future
 	    SnapshotClusters result = new SnapshotClusters(v1._1); 
 	    for(SimpleCluster cluster : clusters) {
 		if(cluster.getObjects().size() >= M) {

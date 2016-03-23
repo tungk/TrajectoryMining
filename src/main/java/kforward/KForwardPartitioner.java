@@ -2,6 +2,9 @@ package kforward;
 
 import java.util.ArrayList;
 
+import model.SimpleCluster;
+import model.SnapshotClusters;
+
 import org.apache.spark.api.java.function.PairFlatMapFunction;
 
 import scala.Tuple2;
@@ -12,7 +15,7 @@ import scala.Tuple2;
  *
  */
 public class KForwardPartitioner implements
-	PairFlatMapFunction<ArrayList<SimpleCluster>, Integer, ArrayList<SimpleCluster>> {
+	PairFlatMapFunction<SnapshotClusters, Integer, SnapshotClusters> {
     private static final long serialVersionUID = -5332024402601915234L;
 
     private int overlaps;
@@ -27,13 +30,13 @@ public class KForwardPartitioner implements
     
     
     @Override
-    public Iterable<Tuple2<Integer, ArrayList<SimpleCluster>>> call(ArrayList<SimpleCluster> t)
+    public Iterable<Tuple2<Integer, SnapshotClusters>> call(SnapshotClusters t)
 	    throws Exception {
-	ArrayList<Tuple2<Integer, ArrayList<SimpleCluster>>> tmp = new ArrayList<>();
-	int time = t.get(0).getTS();
+	ArrayList<Tuple2<Integer, SnapshotClusters>> tmp = new ArrayList<>();
+	int time = t.getTimeStamp();
 	ArrayList<Integer> keys = computePartitionID(time);
 	for(int key : keys) {
-	    tmp.add(new Tuple2<Integer, ArrayList<SimpleCluster>>(key, t));
+	    tmp.add(new Tuple2<Integer, SnapshotClusters>(key, t));
 	}
 	return tmp;
     }

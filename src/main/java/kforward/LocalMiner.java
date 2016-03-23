@@ -8,6 +8,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import model.SimpleCluster;
+import model.SnapshotClusters;
+
 import kforward.SetComp.Result;
 
 public class LocalMiner implements Serializable{
@@ -22,9 +25,9 @@ public class LocalMiner implements Serializable{
 	G = g;
     }
 
-    private ArrayList<ArrayList<SimpleCluster>> input;
+    private ArrayList<SnapshotClusters> input;
 
-    public void setInput(ArrayList<ArrayList<SimpleCluster>> input) {
+    public void setInput(ArrayList<SnapshotClusters> input) {
 	this.input = input;
     }
 
@@ -36,23 +39,23 @@ public class LocalMiner implements Serializable{
 	ArrayList<Pattern> candidates = new ArrayList<>();
 	HashSet<HashSet<Integer>> obj_index = new HashSet<>();
 	// insert clusters at snapshot 1 to be the pattern
-	ArrayList<SimpleCluster> initial_snapshot = input.get(0);
-	for (SimpleCluster cluster : initial_snapshot) {
+	SnapshotClusters initial_snapshot = input.get(0);
+	for (SimpleCluster cluster : initial_snapshot.getClusters()) {
 	    if (cluster.getSize() >= M) {
 		// significant
 		Pattern p = new Pattern(M, L, K, G);
 		p.addObjects(cluster.getObjects());
-		p.growTemporal(cluster.getTS());
+		p.growTemporal(initial_snapshot.getTimeStamp());
 		candidates.add(p);
 	    }
 	}
 	int end = input.size();
 	for (int i = 1; i < end; i++) {
-	    ArrayList<SimpleCluster> current_snap = input.get(i);
-	    int current_ts = current_snap.get(0).getTS();
+	    SnapshotClusters current_snap = input.get(i);
+	    int current_ts = current_snap.getTimeStamp();
 	    // join current_snapshots with candidate set to see
 	    // any chances to form a new pattern
-	    for (SimpleCluster cluster : current_snap) {
+	    for (SimpleCluster cluster : current_snap.getClusters()) {
 		// since clusters are disjoint, checking every candidate
 		boolean create_single_pattern = true;
 		for (int k = 0, can_size = candidates.size(); k < can_size; k++) {
@@ -148,76 +151,76 @@ public class LocalMiner implements Serializable{
 	int L = 1;
 	int G = 5;
 	int M = 3;
-	LocalMiner lm = new LocalMiner(K, M, L, G);
-	ArrayList<ArrayList<SimpleCluster>> input = new ArrayList<>();
-	ArrayList<SimpleCluster> sp1 = new ArrayList<>();
-	ArrayList<SimpleCluster> sp2 = new ArrayList<>();
-	ArrayList<SimpleCluster> sp3 = new ArrayList<>();
-	ArrayList<SimpleCluster> sp4 = new ArrayList<>();
-	ArrayList<SimpleCluster> sp5 = new ArrayList<>();
-	ArrayList<SimpleCluster> sp6 = new ArrayList<>();
-	ArrayList<SimpleCluster> sp7 = new ArrayList<>();
-	ArrayList<SimpleCluster> sp8 = new ArrayList<>();
-	ArrayList<SimpleCluster> sp9 = new ArrayList<>();
-	ArrayList<SimpleCluster> sp10 = new ArrayList<>();
-	sp1.add(new SimpleCluster(2, Arrays.asList(1, 2, 3)));
-	sp1.add(new SimpleCluster(2, Arrays.asList(4, 5, 6)));
-	sp1.add(new SimpleCluster(2, Arrays.asList(7, 8, 9)));
-	input.add(sp1);
-
-	sp2.add(new SimpleCluster(3, Arrays.asList(1, 2, 3, 4)));
-	sp2.add(new SimpleCluster(3, Arrays.asList(5, 6, 7, 8, 9)));
-	input.add(sp2);
-
-	sp3.add(new SimpleCluster(4, Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9)));
-	input.add(sp3);
-
-	sp4.add(new SimpleCluster(5, Arrays.asList(1, 2, 4)));
-	sp4.add(new SimpleCluster(5, Arrays.asList(3, 5, 6)));
-	sp4.add(new SimpleCluster(5, Arrays.asList(7, 8, 9)));
-	input.add(sp4);
-
-	sp5.add(new SimpleCluster(6, Arrays.asList(1, 2, 7, 8, 9)));
-	sp5.add(new SimpleCluster(6, Arrays.asList(4, 5, 6)));
-	sp5.add(new SimpleCluster(6, Arrays.asList(3)));
-	input.add(sp5);
-
-	sp6.add(new SimpleCluster(7, Arrays.asList(1, 2, 3, 4)));
-	sp6.add(new SimpleCluster(7, Arrays.asList(5, 6, 7)));
-	sp6.add(new SimpleCluster(7, Arrays.asList(8, 9)));
-	input.add(sp6);
-
-	sp7.add(new SimpleCluster(8, Arrays.asList(1, 8, 9)));
-	sp7.add(new SimpleCluster(8, Arrays.asList(2, 3, 4)));
-	sp7.add(new SimpleCluster(8, Arrays.asList(5, 6, 7)));
-	input.add(sp7);
-
-	sp8.add(new SimpleCluster(9, Arrays.asList(1, 2, 3, 4)));
-	sp8.add(new SimpleCluster(9, Arrays.asList(5, 6)));
-	sp8.add(new SimpleCluster(9, Arrays.asList(7, 8, 9)));
-	input.add(sp8);
-
-	sp9.add(new SimpleCluster(10, Arrays.asList(1, 2, 3)));
-	sp9.add(new SimpleCluster(10, Arrays.asList(4, 5, 6)));
-	sp9.add(new SimpleCluster(10, Arrays.asList(7, 8, 9)));
-	input.add(sp9);
-
-	sp10.add(new SimpleCluster(11, Arrays.asList(1, 2, 3)));
-	sp10.add(new SimpleCluster(11, Arrays.asList(4, 5, 8)));
-	sp10.add(new SimpleCluster(11, Arrays.asList(6, 7, 9)));
-	input.add(sp10);
-
-	for (ArrayList<SimpleCluster> in : input) {
-	    System.out.println(in);
-	}
-
-	lm.setInput(input);
-	ArrayList<HashSet<Integer>> result = lm.mining();
-
-	int index = 0;
-	for (HashSet<Integer> cluster : result) {
-	    System.out.println((index++) + "\t" + cluster);
-	}
+//	LocalMiner lm = new LocalMiner(K, M, L, G);
+//	ArrayList<ArrayList<SimpleCluster>> input = new ArrayList<>();
+//	ArrayList<SimpleCluster> sp1 = new ArrayList<>();
+//	ArrayList<SimpleCluster> sp2 = new ArrayList<>();
+//	ArrayList<SimpleCluster> sp3 = new ArrayList<>();
+//	ArrayList<SimpleCluster> sp4 = new ArrayList<>();
+//	ArrayList<SimpleCluster> sp5 = new ArrayList<>();
+//	ArrayList<SimpleCluster> sp6 = new ArrayList<>();
+//	ArrayList<SimpleCluster> sp7 = new ArrayList<>();
+//	ArrayList<SimpleCluster> sp8 = new ArrayList<>();
+//	ArrayList<SimpleCluster> sp9 = new ArrayList<>();
+//	ArrayList<SimpleCluster> sp10 = new ArrayList<>();
+//	sp1.add(new SimpleCluster(2, Arrays.asList(1, 2, 3)));
+//	sp1.add(new SimpleCluster(2, Arrays.asList(4, 5, 6)));
+//	sp1.add(new SimpleCluster(2, Arrays.asList(7, 8, 9)));
+//	input.add(sp1);
+//
+//	sp2.add(new SimpleCluster(3, Arrays.asList(1, 2, 3, 4)));
+//	sp2.add(new SimpleCluster(3, Arrays.asList(5, 6, 7, 8, 9)));
+//	input.add(sp2);
+//
+//	sp3.add(new SimpleCluster(4, Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9)));
+//	input.add(sp3);
+//
+//	sp4.add(new SimpleCluster(5, Arrays.asList(1, 2, 4)));
+//	sp4.add(new SimpleCluster(5, Arrays.asList(3, 5, 6)));
+//	sp4.add(new SimpleCluster(5, Arrays.asList(7, 8, 9)));
+//	input.add(sp4);
+//
+//	sp5.add(new SimpleCluster(6, Arrays.asList(1, 2, 7, 8, 9)));
+//	sp5.add(new SimpleCluster(6, Arrays.asList(4, 5, 6)));
+//	sp5.add(new SimpleCluster(6, Arrays.asList(3)));
+//	input.add(sp5);
+//
+//	sp6.add(new SimpleCluster(7, Arrays.asList(1, 2, 3, 4)));
+//	sp6.add(new SimpleCluster(7, Arrays.asList(5, 6, 7)));
+//	sp6.add(new SimpleCluster(7, Arrays.asList(8, 9)));
+//	input.add(sp6);
+//
+//	sp7.add(new SimpleCluster(8, Arrays.asList(1, 8, 9)));
+//	sp7.add(new SimpleCluster(8, Arrays.asList(2, 3, 4)));
+//	sp7.add(new SimpleCluster(8, Arrays.asList(5, 6, 7)));
+//	input.add(sp7);
+//
+//	sp8.add(new SimpleCluster(9, Arrays.asList(1, 2, 3, 4)));
+//	sp8.add(new SimpleCluster(9, Arrays.asList(5, 6)));
+//	sp8.add(new SimpleCluster(9, Arrays.asList(7, 8, 9)));
+//	input.add(sp8);
+//
+//	sp9.add(new SimpleCluster(10, Arrays.asList(1, 2, 3)));
+//	sp9.add(new SimpleCluster(10, Arrays.asList(4, 5, 6)));
+//	sp9.add(new SimpleCluster(10, Arrays.asList(7, 8, 9)));
+//	input.add(sp9);
+//
+//	sp10.add(new SimpleCluster(11, Arrays.asList(1, 2, 3)));
+//	sp10.add(new SimpleCluster(11, Arrays.asList(4, 5, 8)));
+//	sp10.add(new SimpleCluster(11, Arrays.asList(6, 7, 9)));
+//	input.add(sp10);
+//
+//	for (ArrayList<SimpleCluster> in : input) {
+//	    System.out.println(in);
+//	}
+//
+//	lm.setInput(input);
+//	ArrayList<HashSet<Integer>> result = lm.mining();
+//
+//	int index = 0;
+//	for (HashSet<Integer> cluster : result) {
+//	    System.out.println((index++) + "\t" + cluster);
+//	}
     }
     /**
      * clear the current status of the lm

@@ -5,22 +5,15 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
+/**
+ * This file should only be used in the Driver node (MainApp).
+ * The executor directly access the parameter values.
+ * @author a0048267
+ *
+ */
 public class AppProperties {
-    // this initialization should start per JVM
-
-    public static Properties props;
-
-    // public static void initProperty(String filename) {
-    // if(props == null) {
-    // props = new Properties();
-    // }try {
-    // props.loadFromXML(new FileInputStream(filename));
-    // } catch (IOException e) {
-    // e.printStackTrace();
-    // }
-    // }
-
-    // ensure this code runs at each JVM start-up
+    private static Properties props;
+    // ensure this code runs at JVM start-up
     static {
 	String filename = "app-config.xml";
 	props = new Properties();

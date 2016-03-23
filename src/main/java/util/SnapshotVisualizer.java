@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.Set;
 
-import model.Cluster;
 import model.Point;
+import model.SimpleCluster;
 import model.SnapShot;
 
 import edu.princeton.cs.introcs.StdDraw;
@@ -31,11 +31,11 @@ public class SnapshotVisualizer {
 	}
     }
 
-    public static void drawClusters(ArrayList<Cluster> cluster,
+    public static void drawClusters(ArrayList<SimpleCluster> cluster,
 	    SnapShot sp) {
 	StdDraw.setScale(0, 1);
 	StdDraw.setPenRadius(0.01);
-	for (Cluster c : cluster) {
+	for (SimpleCluster c : cluster) {
 	    StdDraw.setPenColor(colors[r.nextInt(colors.length)]);
 	    for (int obj : c.getObjects()) {
 		Point p = sp.getPoint(obj);

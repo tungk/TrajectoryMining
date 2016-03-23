@@ -10,6 +10,7 @@ import org.apache.spark.api.java.function.Function;
 
 import conf.AppProperties;
 import model.SnapShot;
+import model.SnapshotClusters;
 
 public class KForwordLayout implements Serializable {
     private static final long serialVersionUID = 5312596867491192993L;
@@ -40,16 +41,15 @@ public class KForwordLayout implements Serializable {
 			conf.Constants.SNAPSHOT_PARTITIONS);
 
 	// DBSCAN
-	JavaRDD<ArrayList<SimpleCluster>> CLUSTERS = TS_CLUSTERS
+	JavaRDD<SnapshotClusters> CLUSTERS = TS_CLUSTERS
 		.map(new DBSCANWrapper(conf.Constants.EPS,
 			conf.Constants.MINPTS, M)).filter(
-			new Function<ArrayList<SimpleCluster>, Boolean>() {
+			new Function<SnapshotClusters, Boolean>() {
 			    private static final long serialVersionUID = 7146570874034097868L;
-
 			    @Override
-			    public Boolean call(ArrayList<SimpleCluster> v1)
+			    public Boolean call(SnapshotClusters v1)
 				    throws Exception {
-				return v1 != null && v1.size() > 0;
+				return v1 != null && v1.getClusterSize() > 0;
 			    }
 			});
 	// TODO:: temporally hard-code first for efficiency

@@ -7,13 +7,12 @@ public class DistanceOracle {
     /**
      * given the two point's coordinate in latitude and longitude, we wish to
      * find the distance in meters. Here we do not need to use ``haversine'' 
-     * formula
-     * since the points are near, thus can be viewed as a triangle.
+     * formula because the points are near, and they can be viewed as a triangle.
      * @param p1 first point
      * @param p2 second point
      * @return distance in meters
      */
-    public static double dist(Point p1, Point p2) {
+    public static double compEarthDistance(Point p1, Point p2) {
 	double lat1 = p1.getLat();
 	double lat2 = p2.getLat();
 	double lont1 = p1.getLont();

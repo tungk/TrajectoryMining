@@ -8,12 +8,21 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import model.SelfAdjustPattern;
+import model.SnapshotClusters;
+import model.SimpleCluster;
+
 import org.apache.spark.api.java.function.Function;
 
-import kreplicate.SetComp.Result;
+import util.SetComp;
+import util.SetUtils;
+import util.SetComp.Result;
+
+import common.SerializableComparator;
 
 
-public class LocalMiner implements Function<Iterable<ArrayList<SimpleCluster>>,ArrayList<HashSet<Integer>>>{
+
+public class LocalMiner implements Function<Iterable<SnapshotClusters>,ArrayList<HashSet<Integer>>>{
     private static final long serialVersionUID = 416636556315652980L;
     private int K, M, L, G;
 
@@ -25,27 +34,40 @@ public class LocalMiner implements Function<Iterable<ArrayList<SimpleCluster>>,A
 	G = g;
     }
 
-    private ArrayList<ArrayList<SimpleCluster>> input;
+    private ArrayList<SnapshotClusters> input;
 
     @Override
     public ArrayList<HashSet<Integer>> call(
-	    Iterable<ArrayList<SimpleCluster>> v1) throws Exception {
-	input = new ArrayList<ArrayList<SimpleCluster>>();
-	Iterator<ArrayList<SimpleCluster>> v1itr = v1.iterator();
+	    Iterable<SnapshotClusters> v1) throws Exception {
+	input = new ArrayList<SnapshotClusters>();
+	Iterator<SnapshotClusters> v1itr = v1.iterator();
 	while(v1itr.hasNext()) {
 	    input.add(v1itr.next()); // seems unnecessary copying action, but we have no choice..
 	}
-	Collections.sort(input, new SerializedComparator<ArrayList<SimpleCluster>>(){
+	Collections.sort(input, new SerializableComparator<SnapshotClusters>(){
 	    private static final long serialVersionUID = 321716012475853207L;
 	    @Override
-	    public int compare(ArrayList<SimpleCluster> o1,
-		    ArrayList<SimpleCluster> o2) {
-		if(o1.size() == 0 || o2.size() == 0) {
-		   return -1;
-		} else {
-		    return o1.get(0).getTS() - o2.get(0).getTS();
-		}
+	    public int compare(SnapshotClusters o1,
+		    SnapshotClusters o2) {
+		 return o1.getTimeStamp() - o2.getTimeStamp();
 	    }});
+	
+	//TODO:: this checking should be removed in the final release
+	boolean sorted = true;
+	for(int i = 1 ; i < input.size(); i++) {
+	    if(input.get(i).getTimeStamp()-
+		    input.get(i-1).getTimeStamp() <= 0) {
+		sorted = false;
+		break;
+	    }
+	}
+	if(sorted) {
+	    System.out.println("Input is sorted!");
+	} else {
+	    System.out.println("[ERROR] Input is not sorted!!");
+	}
+	//TODO:: delete till here
+	
 	return mining();
     }
     
@@ -55,29 +77,42 @@ public class LocalMiner implements Function<Iterable<ArrayList<SimpleCluster>>,A
 	if (input.size() < L) {
 	    return result; // not enough inputs
 	}
-	ArrayList<Pattern> candidates = new ArrayList<>();
+	ArrayList<SelfAdjustPattern> candidates = new ArrayList<>();
 	HashSet<HashSet<Integer>> obj_index = new HashSet<>();
 	// insert clusters at snapshot 1 to be the pattern
-	ArrayList<SimpleCluster> initial_snapshot = input.get(0);
-	for (SimpleCluster cluster : initial_snapshot) {
+	SnapshotClusters initial_sp = input.get(0);
+	for(SimpleCluster cluster : initial_sp.getClusters()) {
 	    if (cluster.getSize() >= M) {
 		// significant
-		Pattern p = new Pattern(M, L, K, G);
+		SelfAdjustPattern p = new SelfAdjustPattern(M, L, K, G);
 		p.addObjects(cluster.getObjects());
-		p.growTemporal(cluster.getTS());
+		p.growTemporal(initial_sp.getTimeStamp());
 		candidates.add(p);
 	    }
 	}
+	
+//	
+//	ArrayList<SimpleCluster> initial_snapshot = input.get(0).getClusters();
+//	for (SimpleCluster cluster : initial_snapshot) {
+//	    if (cluster.getSize() >= M) {
+//		// significant
+//		SelfAdjustPattern p = new SelfAdjustPattern(M, L, K, G);
+//		p.addObjects(cluster.getObjects());
+//		p.growTemporal(cluster.getTS());
+//		candidates.add(p);
+//	    }
+//	}
+	
 	int end = input.size();
 	for (int i = 1; i < end; i++) {
-	    ArrayList<SimpleCluster> current_snap = input.get(i);
-	    int current_ts = current_snap.get(0).getTS();
+	    SnapshotClusters current_snap = input.get(i);
+	    int current_ts = current_snap.getTimeStamp();
 	    // join current_snapshots with candidate set to see
 	    // any chances to form a new pattern
-	    for (SimpleCluster cluster : current_snap) {
+	    for (SimpleCluster cluster : current_snap.getClusters()) {
 		// since clusters are disjoint, checking every candidate
 		for (int k = 0, can_size = candidates.size(); k < can_size; k++) {
-		    Pattern p = candidates.get(k);
+		    SelfAdjustPattern p = candidates.get(k);
 		    SetComp comp = SetUtils.compareSets(cluster.getObjects(),
 			    p.getObjects());
 		    if (comp.getResult() == Result.SUPER
@@ -85,17 +120,17 @@ public class LocalMiner implements Function<Iterable<ArrayList<SimpleCluster>>,A
 			// grow the current pattern
 			if (!p.growTemporal(current_ts)
 			&& !subsetOf(obj_index, p.getObjects())) {
-			    Pattern np = new Pattern(M, L, K, G);
+			    SelfAdjustPattern np = new SelfAdjustPattern(M, L, K, G);
 			    np.addObjects(p.getObjects());
 			    np.growTemporal(current_ts);
 			    candidates.add(np);
 			}
-		    } else if (comp.getResult() == Result.SUB) {
+		    } else if (comp.getResult() == Result.SUB || comp.getResult() == Result.NONE) {
 			Set<Integer> commons = comp.getIntersect();
 			if (commons.size() >= M 
 			&& !subsetOf(obj_index, commons)) {
 			    // create a new pattern;
-			    Pattern newp = new Pattern(M, L, K, G);
+			    SelfAdjustPattern newp = new SelfAdjustPattern(M, L, K, G);
 			    newp.addObjects(commons);
 			    newp.addTemporals(p.getTstamps());
 			    if (newp.growTemporal(current_ts)) {
@@ -106,9 +141,9 @@ public class LocalMiner implements Function<Iterable<ArrayList<SimpleCluster>>,A
 		}
 	    }
 	    // further remove unqualified patterns
-	    Iterator<Pattern> pitr = candidates.iterator();
+	    Iterator<SelfAdjustPattern> pitr = candidates.iterator();
 	    while (pitr.hasNext()) {
-		Pattern p = pitr.next();
+		SelfAdjustPattern p = pitr.next();
 		if (current_ts - p.getLatestTS() >= G) { // checking for expiring, here
 						// we use >=, since in the next
 						// round, every cluster has one
@@ -133,9 +168,9 @@ public class LocalMiner implements Function<Iterable<ArrayList<SimpleCluster>>,A
 	    }
 	}
 	// dump the patterns in the final cache
-	Iterator<Pattern> pitr = candidates.iterator();
+	Iterator<SelfAdjustPattern> pitr = candidates.iterator();
 	while (pitr.hasNext()) {
-	    Pattern p = pitr.next();
+	    SelfAdjustPattern p = pitr.next();
 	    //TODO:: remove when final deploy
 //	    System.out.println(p);
 	    if (p.checkFullValidity()
@@ -153,63 +188,63 @@ public class LocalMiner implements Function<Iterable<ArrayList<SimpleCluster>>,A
 	int G = 3;
 	int M = 3;
 	LocalMiner lm = new LocalMiner(K, M, L, G);
-	ArrayList<ArrayList<SimpleCluster>> input = new ArrayList<>();
-	ArrayList<SimpleCluster> sp1 = new ArrayList<>();
-	ArrayList<SimpleCluster> sp2 = new ArrayList<>();
-	ArrayList<SimpleCluster> sp3 = new ArrayList<>();
-	ArrayList<SimpleCluster> sp4 = new ArrayList<>();
-	ArrayList<SimpleCluster> sp5 = new ArrayList<>();
-	ArrayList<SimpleCluster> sp6 = new ArrayList<>();
-	ArrayList<SimpleCluster> sp7 = new ArrayList<>();
-	ArrayList<SimpleCluster> sp8 = new ArrayList<>();
-	ArrayList<SimpleCluster> sp9 = new ArrayList<>();
-	ArrayList<SimpleCluster> sp10 = new ArrayList<>();
-	sp1.add(new SimpleCluster(2, Arrays.asList(1, 2, 3)));
-	sp1.add(new SimpleCluster(2, Arrays.asList(4, 5, 6)));
-	sp1.add(new SimpleCluster(2, Arrays.asList(7, 8, 9)));
+	ArrayList<SnapshotClusters> input = new ArrayList<>();
+	SnapshotClusters sp1 = new SnapshotClusters(1);
+	SnapshotClusters sp2 = new SnapshotClusters(2);
+	SnapshotClusters sp3 = new SnapshotClusters(3);
+	SnapshotClusters sp4 = new SnapshotClusters(4);
+	SnapshotClusters sp5 = new SnapshotClusters(5);
+	SnapshotClusters sp6 = new SnapshotClusters(6);
+	SnapshotClusters sp7 = new SnapshotClusters(7);
+	SnapshotClusters sp8 = new SnapshotClusters(8);
+	SnapshotClusters sp9 = new SnapshotClusters(9);
+	SnapshotClusters sp10 = new SnapshotClusters(10);
+	sp1.addCluster(new SimpleCluster(Arrays.asList(1, 2, 3)));
+	sp1.addCluster(new SimpleCluster(Arrays.asList(4, 5, 6)));
+	sp1.addCluster(new SimpleCluster(Arrays.asList(7, 8, 9)));
 	
 
-	sp2.add(new SimpleCluster(3, Arrays.asList(1, 2, 3, 4)));
-	sp2.add(new SimpleCluster(3, Arrays.asList(5, 6, 7, 8, 9)));
+	sp2.addCluster(new SimpleCluster(Arrays.asList(1, 2, 3, 4)));
+	sp2.addCluster(new SimpleCluster(Arrays.asList(5, 6, 7, 8, 9)));
 	
 	
 
-	sp3.add(new SimpleCluster(4, Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9)));
+	sp3.addCluster(new SimpleCluster(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9)));
 	
 
-	sp4.add(new SimpleCluster(5, Arrays.asList(1, 2, 4)));
-	sp4.add(new SimpleCluster(5, Arrays.asList(3, 5, 6)));
-	sp4.add(new SimpleCluster(5, Arrays.asList(7, 8, 9)));
+	sp4.addCluster(new SimpleCluster(Arrays.asList(1, 2, 4)));
+	sp4.addCluster(new SimpleCluster(Arrays.asList(3, 5, 6)));
+	sp4.addCluster(new SimpleCluster(Arrays.asList(7, 8, 9)));
 
 
-	sp5.add(new SimpleCluster(6, Arrays.asList(1, 2, 7, 8, 9)));
-	sp5.add(new SimpleCluster(6, Arrays.asList(4, 5, 6)));
-	sp5.add(new SimpleCluster(6, Arrays.asList(3)));
+	sp5.addCluster(new SimpleCluster(Arrays.asList(1, 2, 7, 8, 9)));
+	sp5.addCluster(new SimpleCluster(Arrays.asList(4, 5, 6)));
+	sp5.addCluster(new SimpleCluster(Arrays.asList(3)));
 	
 
-	sp6.add(new SimpleCluster(7, Arrays.asList(1, 2, 3, 4)));
-	sp6.add(new SimpleCluster(7, Arrays.asList(5, 6, 7)));
-	sp6.add(new SimpleCluster(7, Arrays.asList(8, 9)));
+	sp6.addCluster(new SimpleCluster(Arrays.asList(1, 2, 3, 4)));
+	sp6.addCluster(new SimpleCluster(Arrays.asList(5, 6, 7)));
+	sp6.addCluster(new SimpleCluster(Arrays.asList(8, 9)));
 	
 
-	sp7.add(new SimpleCluster(8, Arrays.asList(1, 8, 9)));
-	sp7.add(new SimpleCluster(8, Arrays.asList(2, 3, 4)));
-	sp7.add(new SimpleCluster(8, Arrays.asList(5, 6, 7)));
+	sp7.addCluster(new SimpleCluster(Arrays.asList(1, 8, 9)));
+	sp7.addCluster(new SimpleCluster(Arrays.asList(2, 3, 4)));
+	sp7.addCluster(new SimpleCluster(Arrays.asList(5, 6, 7)));
 	
 
-	sp8.add(new SimpleCluster(9, Arrays.asList(1, 2, 3, 4)));
-	sp8.add(new SimpleCluster(9, Arrays.asList(5, 6)));
-	sp8.add(new SimpleCluster(9, Arrays.asList(7, 8, 9)));
+	sp8.addCluster(new SimpleCluster(Arrays.asList(1, 2, 3, 4)));
+	sp8.addCluster(new SimpleCluster(Arrays.asList(5, 6)));
+	sp8.addCluster(new SimpleCluster(Arrays.asList(7, 8, 9)));
 
 
-	sp9.add(new SimpleCluster(10, Arrays.asList(1, 2, 3)));
-	sp9.add(new SimpleCluster(10, Arrays.asList(4, 5, 6)));
-	sp9.add(new SimpleCluster(10, Arrays.asList(7, 8, 9)));
+	sp9.addCluster(new SimpleCluster(Arrays.asList(1, 2, 3)));
+	sp9.addCluster(new SimpleCluster(Arrays.asList(4, 5, 6)));
+	sp9.addCluster(new SimpleCluster(Arrays.asList(7, 8, 9)));
 	
 
-	sp10.add(new SimpleCluster(11, Arrays.asList(1, 2, 3)));
-	sp10.add(new SimpleCluster(11, Arrays.asList(4, 5, 8)));
-	sp10.add(new SimpleCluster(11, Arrays.asList(6, 7, 9)));
+	sp10.addCluster(new SimpleCluster(Arrays.asList(1, 2, 3)));
+	sp10.addCluster(new SimpleCluster(Arrays.asList(4, 5, 8)));
+	sp10.addCluster(new SimpleCluster(Arrays.asList(6, 7, 9)));
 	
 	
 	input.add(sp10);input.add(sp5);input.add(sp3);
@@ -217,7 +252,7 @@ public class LocalMiner implements Function<Iterable<ArrayList<SimpleCluster>>,A
 	input.add(sp7);input.add(sp8);input.add(sp9);
 	input.add(sp1);
 
-	for (ArrayList<SimpleCluster> in : input) {
+	for (SnapshotClusters in : input) {
 	    System.out.println(in);
 	}
 
@@ -261,5 +296,4 @@ public class LocalMiner implements Function<Iterable<ArrayList<SimpleCluster>>,A
 	    obj_index.add(objects);
 	}
     }
-
 }

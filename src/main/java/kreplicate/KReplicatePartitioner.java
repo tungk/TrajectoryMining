@@ -2,12 +2,14 @@ package kreplicate;
 
 import java.util.ArrayList;
 
+import model.SnapshotClusters;
+
 import org.apache.spark.api.java.function.PairFlatMapFunction;
 
 import scala.Tuple2;
 
 public class KReplicatePartitioner implements
-	PairFlatMapFunction<ArrayList<SimpleCluster>, Integer, ArrayList<SimpleCluster>> {
+	PairFlatMapFunction<SnapshotClusters, Integer, SnapshotClusters> {
     /**
      * 
      */
@@ -24,12 +26,12 @@ public class KReplicatePartitioner implements
     }
 
     @Override
-    public Iterable<Tuple2<Integer, ArrayList<SimpleCluster>>> call(
-	    ArrayList<SimpleCluster> t) throws Exception {
-	int ts = t.get(0).getTS();
-	ArrayList<Tuple2<Integer, ArrayList<SimpleCluster>>> result =  new ArrayList<>();
+    public Iterable<Tuple2<Integer, SnapshotClusters>> call(
+	    SnapshotClusters t) throws Exception {
+	int ts = t.getTimeStamp();
+	ArrayList<Tuple2<Integer, SnapshotClusters>> result =  new ArrayList<>();
 	for(int i = 0; i < P; i++) {
-	    result.add(new Tuple2<Integer, ArrayList<SimpleCluster>>(ts+i , t));
+	    result.add(new Tuple2<Integer, SnapshotClusters>(ts+i , t));
 	}
 	return result;
     }
