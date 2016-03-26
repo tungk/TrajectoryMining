@@ -1,7 +1,6 @@
 package kforward;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashSet;
 
 import org.apache.spark.api.java.JavaPairRDD;

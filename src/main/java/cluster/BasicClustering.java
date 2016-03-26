@@ -1,8 +1,5 @@
 package cluster;
 
-import java.io.Serializable;
-
-
 import model.SnapShot;
 import model.SnapshotClusters;
 

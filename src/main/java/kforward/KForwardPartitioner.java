@@ -2,7 +2,6 @@ package kforward;
 
 import java.util.ArrayList;
 
-import model.SimpleCluster;
 import model.SnapshotClusters;
 
 import org.apache.spark.api.java.function.PairFlatMapFunction;

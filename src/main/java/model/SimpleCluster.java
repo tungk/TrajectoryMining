@@ -1,7 +1,9 @@
 package model;
 
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
+
 import java.io.Serializable;
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -12,16 +14,21 @@ import java.util.Set;
  * as multiple clusters belonging to the same snapshots containing the same ID.
  * 
  * TODO:: May use BitSet or FastUtil set to further boost the performance
+ * 
  * @author a0048267
  *
  */
 public class SimpleCluster implements Serializable{
     private static final long serialVersionUID = 7061586699944678710L;
-    private HashSet<Integer> oids;
+    //use a more memory friendly implementation of integer set
+    private IntOpenHashSet oids;
+//    private HashSet<Integer> oids;
     private String ID; // this ID is optionally set
   
     public SimpleCluster() {
-	oids = new HashSet<Integer>();
+//	oids = new HashSet<Integer>();
+//	oids = IntSet.;
+	oids = new IntOpenHashSet();
     }
     
     /**
@@ -40,7 +47,7 @@ public class SimpleCluster implements Serializable{
 	return oids.size();
     }
     
-    public HashSet<Integer> getObjects () {
+    public IntSet getObjects () {
 	return oids;
     }
     

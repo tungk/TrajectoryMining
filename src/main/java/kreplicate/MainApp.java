@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import model.SnapShot;
 import model.SnapshotClusters;
 
 import org.apache.log4j.Level;
@@ -13,7 +12,6 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.function.Function;
 
 import cluster.BasicClustering;
 import cluster.ClusteringMethod;
@@ -21,7 +19,6 @@ import cluster.ClusteringMethod;
 import scala.Tuple2;
 
 import conf.AppProperties;
-import conf.Constants;
 
 /**
  * This package testifies a k-forward approach for trajectory mining
