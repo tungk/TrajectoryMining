@@ -15,7 +15,7 @@ import org.apache.spark.api.java.function.Function;
  * @author a0048267
  * 
  */
-public class LocalPattern implements Function<Iterable<SnapshotClusters>, Iterable<HashSet<Integer>>>{
+public class LocalPattern implements Function<Iterable<SnapshotClusters>, ArrayList<HashSet<Integer>>>{
     private static final long serialVersionUID = 7626346274874868740L;
 //    private int K, L,G,M;
     private LocalMiner lm;
@@ -28,7 +28,7 @@ public class LocalPattern implements Function<Iterable<SnapshotClusters>, Iterab
     }
     
     @Override
-    public Iterable<HashSet<Integer>> call(Iterable<SnapshotClusters> v1)
+    public ArrayList<HashSet<Integer>> call(Iterable<SnapshotClusters> v1)
 	    throws Exception { 
 	ArrayList<SnapshotClusters> tmp = new ArrayList<>();
 	Iterator<SnapshotClusters> itr = v1.iterator();
