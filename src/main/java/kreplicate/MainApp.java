@@ -32,28 +32,24 @@ import conf.AppProperties;
  */
 public class MainApp {
     public static void main(String[] args) {
-   	SparkConf conf = new SparkConf();
-   	if (!conf.contains("spark.app.name")) {
-   	    conf = conf.setAppName(AppProperties.getProperty("appName"));
-   	}
-   	if (!conf.contains("spark.master")) {
-   	    conf = conf.setMaster(AppProperties.getProperty("spark_master"));
-   	}
-   	Logger.getLogger("org").setLevel(Level.OFF);
-   	Logger.getLogger("aka").setLevel(Level.OFF);
-   	
-   	JavaSparkContext context = new JavaSparkContext(conf);
-   	String hdfs_input = AppProperties.getProperty("hdfs_input");
-   	int hdfs_read_partitions = Integer.parseInt(AppProperties
-   		.getProperty("hdfs_read_partitions"));
    	
    	
-	int K = Integer.parseInt(AppProperties.getProperty("K"));
+   	int K = Integer.parseInt(AppProperties.getProperty("K"));
 	int L = Integer.parseInt(AppProperties.getProperty("L"));
 	int M = Integer.parseInt(AppProperties.getProperty("M"));
 	int G = Integer.parseInt(AppProperties.getProperty("G"));
+   	String hdfs_input = AppProperties.getProperty("hdfs_input");
+   	int hdfs_read_partitions = Integer.parseInt(AppProperties.getProperty("hdfs_read_partitions"));
    	
+//   	if (!conf.contains("spark.app.name")) {
+   	String name = AppProperties.getProperty("appName");
+   	name = name + "-K"+K+"-L"+L+"-M"+M+"-G"+"-Par"+hdfs_read_partitions;
+//   	}
+   	Logger.getLogger("org").setLevel(Level.OFF);
+   	Logger.getLogger("aka").setLevel(Level.OFF);
    	
+   	SparkConf conf = new SparkConf().setAppName(AppProperties.getProperty("appName"));
+   	JavaSparkContext context = new JavaSparkContext(conf);
    	JavaRDD<String> input = context.textFile(hdfs_input, hdfs_read_partitions);
    	ClusteringMethod cm = new BasicClustering();
    	JavaRDD<SnapshotClusters> CLUSTERS = cm.doClustering(input, M);
@@ -63,22 +59,12 @@ public class MainApp {
    	JavaPairRDD<Integer, ArrayList<HashSet<Integer>>> result = KFL.runLogic();
    	List<Tuple2<Integer, ArrayList<HashSet<Integer>>>> rs = result.collect();
    	for(Tuple2<Integer, ArrayList<HashSet<Integer>>> r : rs) {
-   	    if(r._2.size() != 0) {
+   	    if(r._2.size() != 0) { 
    		for(HashSet<Integer> cluster : r._2) {
    		    System.out.println(r._1 + "\t"+ cluster);
    		}
    	    }
    	}
-////   	result.saveAsTextFile(AppProperties.getProperty("local_output_dir"));
-//   	List<Tuple2<Integer, Iterable<HashSet<Integer>>>> r = result.collect();
-//   	String local_output = AppProperties.getProperty("local_output_dir");
-//   	System.out.println(local_output);
-//   	FileWriter fw = new FileWriter(local_output);
-//   	BufferedWriter bw = new BufferedWriter(fw);
-//   	for(Tuple2<Integer, Iterable<HashSet<Integer>>> tuple : r) {
-//   	    bw.write(String.format("[%d]:%s\n",  tuple._1, tuple._2));
-//   	}
-//   	bw.close();
    	context.close();
        }
 }
