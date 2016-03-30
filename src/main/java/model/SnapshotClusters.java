@@ -19,6 +19,10 @@ public class SnapshotClusters implements Serializable {
 //    private ArrayList<SimpleCluster> clusters;
     private ObjectArrayList<SimpleCluster> clusters;
     
+    /**
+     * create an empty snapshot with a time sequence
+     * @param time
+     */
     public SnapshotClusters(int time){
 	ts = time;
 //	clusters = new ArrayList<>();

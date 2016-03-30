@@ -118,7 +118,7 @@ public class SelfAdjustPattern {
 
     @Override
     public String toString() {
-	return String.format("<%s x %s>", objects, tstamps);
+	return String.format("<%s x %s>", tstamps, objects);
     }
 
     public void addTemporals(ArrayList<Integer> tstamps2) {

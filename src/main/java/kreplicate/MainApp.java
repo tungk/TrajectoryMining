@@ -12,11 +12,13 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.function.Function;
 
 import cluster.BasicClustering;
 import cluster.ClusteringMethod;
 
 import scala.Tuple2;
+import java.util.Iterator;
 
 import conf.AppProperties;
 
@@ -43,12 +45,23 @@ public class MainApp {
    	
 //   	if (!conf.contains("spark.app.name")) {
    	String name = AppProperties.getProperty("appName");
-   	name = name + "-K"+K+"-L"+L+"-M"+M+"-G"+"-Par"+hdfs_read_partitions;
+   	name = name + "-K"+K+"-L"+L+"-M"+M+"-G"+G+"-Par"+hdfs_read_partitions;
 //   	}
    	Logger.getLogger("org").setLevel(Level.OFF);
    	Logger.getLogger("aka").setLevel(Level.OFF);
    	
-   	SparkConf conf = new SparkConf().setAppName(AppProperties.getProperty("appName"));
+   	SparkConf conf = new SparkConf();
+   	System.out.println("My Conf Before:");
+   	for(Tuple2<String,String> t : conf.getAll()) {
+   	    System.out.println(t._1+ "->"+t._2);   
+   	}
+   	conf = conf.setAppName(name);
+   	
+   	System.out.println("My Conf After:");
+   	for(Tuple2<String,String> t : conf.getAll()) {
+   	    System.out.println(t._1+ "->"+t._2);   
+   	}
+   	
    	JavaSparkContext context = new JavaSparkContext(conf);
    	JavaRDD<String> input = context.textFile(hdfs_input, hdfs_read_partitions);
    	ClusteringMethod cm = new BasicClustering();
@@ -58,6 +71,16 @@ public class MainApp {
    	KFL.setInput(CLUSTERS);
    	JavaPairRDD<Integer, ArrayList<HashSet<Integer>>> result = KFL.runLogic();
    	List<Tuple2<Integer, ArrayList<HashSet<Integer>>>> rs = result.collect();
+   	ArrayList<HashSet<Integer>> ground = new ArrayList<>();
+   	for(Tuple2<Integer, ArrayList<HashSet<Integer>>> r : rs) {
+   	    if(r._2.size() != 0) {
+   		for(HashSet<Integer> cluster : r._2) {
+   		    ground.add(cluster);
+   		}
+   	    }
+   	}
+   	//then collect again
+   	rs = result.filter(new DuplicateClusterFilter(ground)).collect();
    	for(Tuple2<Integer, ArrayList<HashSet<Integer>>> r : rs) {
    	    if(r._2.size() != 0) { 
    		for(HashSet<Integer> cluster : r._2) {
@@ -67,4 +90,28 @@ public class MainApp {
    	}
    	context.close();
        }
+}
+
+class DuplicateClusterFilter implements Function<Tuple2<Integer,ArrayList<HashSet<Integer>>>, Boolean>{
+    private static final long serialVersionUID = -602382731006034424L;
+    private ArrayList<HashSet<Integer>> grounds;
+    public DuplicateClusterFilter(ArrayList<HashSet<Integer>> ground) {
+	grounds = ground;
+    }
+    @Override
+    public Boolean call(Tuple2<Integer, ArrayList<HashSet<Integer>>> v1)
+	    throws Exception {
+	ArrayList<HashSet<Integer>> value = v1._2;
+	Iterator<HashSet<Integer>> value_itr = value.iterator();
+	while(value_itr.hasNext()) {
+	    HashSet<Integer> next = value_itr.next();
+	    for(HashSet<Integer> gr : grounds) {
+		if(gr.containsAll(next)
+			&& gr.size() > next.size()) { //ensures not removed by self
+		    return false;
+		}
+	    }
+	}
+	return true;
+    }
 }
