@@ -18,8 +18,8 @@ public class DistanceOracle {
 	double lont1 = p1.getLont();
 	double lont2 = p2.getLont();
 	// convert to meter
-	double latDistance = Math.toRadians(lat2-lat1) * EARTH_RADIUS;
-	double lonDistance = Math.toRadians(lont2-lont1) * EARTH_RADIUS;
-	return Math.sqrt(Math.pow(latDistance, 2) + Math.pow(lonDistance, 2)) * 1000; 
+	double latDistance = Math.toRadians(lat2-lat1) * EARTH_RADIUS; //unit km
+	double lonDistance = Math.toRadians(lont2-lont1) * EARTH_RADIUS; //unit km
+	return Math.sqrt(Math.pow(latDistance, 2) + Math.pow(lonDistance, 2)) * 1000; //unit m 
     }
 }

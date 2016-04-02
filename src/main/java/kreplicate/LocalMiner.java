@@ -27,7 +27,6 @@ public class LocalMiner implements Function<Iterable<SnapshotClusters>,ArrayList
     private int K, M, L, G;
 
     public LocalMiner(int k, int m, int l, int g) {
-	super();
 	K = k;
 	M = m;
 	L = l;
@@ -41,8 +40,11 @@ public class LocalMiner implements Function<Iterable<SnapshotClusters>,ArrayList
 	    Iterable<SnapshotClusters> v1) throws Exception {
 	input = new ArrayList<SnapshotClusters>();
 	Iterator<SnapshotClusters> v1itr = v1.iterator();
+	long total_clusters = 0; // for statistics
 	while(v1itr.hasNext()) {
-	    input.add(v1itr.next()); // seems unnecessary copying action, but we have no choice..
+	    SnapshotClusters s = v1itr.next();
+	    input.add(s); // seems unnecessary copying action, but we have no choice right now..
+	    total_clusters += s.getClusterSize();
 	}
 	Collections.sort(input, new SerializableComparator<SnapshotClusters>(){
 	    private static final long serialVersionUID = 321716012475853207L;
@@ -62,13 +64,18 @@ public class LocalMiner implements Function<Iterable<SnapshotClusters>,ArrayList
 	    }
 	}
 	if(sorted) {
-	    System.out.println("Input is sorted!");
+	    System.out.println("Input is sorted! ");
 	} else {
 	    System.out.println("[ERROR] Input is not sorted!!");
 	}
 	//TODO:: delete till here
 //	System.out.println("input:"+input);
-	return mining();
+	long start= System.currentTimeMillis();
+	ArrayList<HashSet<Integer>> mined_clusters = mining();
+	System.out.println(total_clusters + " clusters in " +  input.size()+" timestamps, takes " + (
+		System.currentTimeMillis() - start) + " ms");
+	System.out.println(input);
+	return mined_clusters;
     }
     
 

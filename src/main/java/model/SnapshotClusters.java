@@ -3,7 +3,6 @@ package model;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 
 /**
  * The class contains a set of SimpleCluster of at the 
