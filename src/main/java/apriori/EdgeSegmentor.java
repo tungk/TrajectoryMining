@@ -1,16 +1,13 @@
 package apriori;
 
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 
 import java.util.ArrayList;
 
 import model.SimpleCluster;
 import model.SnapshotClusters;
-
 import org.apache.spark.api.java.function.PairFlatMapFunction;
-
-import com.zaxxer.sparsebits.SparseBitSet;
-
 import scala.Tuple2;
 
 /**
@@ -24,29 +21,29 @@ import scala.Tuple2;
  */
 public class EdgeSegmentor
 	implements
-	PairFlatMapFunction<SnapshotClusters, Tuple2<Integer, Integer>, SparseBitSet> {
+	PairFlatMapFunction<SnapshotClusters, Tuple2<Integer, Integer>, IntSet> {
     /**
      * 
      */
     private static final long serialVersionUID = 4125348116998762164L;
+
     @Override
-    public Iterable<Tuple2<Tuple2<Integer, Integer>, SparseBitSet>> call(
+    public Iterable<Tuple2<Tuple2<Integer, Integer>, IntSet>> call(
 	    SnapshotClusters t) throws Exception {
-	ArrayList<Tuple2<Tuple2<Integer, Integer>, SparseBitSet>> results = new ArrayList<>();
+	ArrayList<Tuple2<Tuple2<Integer, Integer>, IntSet>> results = new ArrayList<>();
 	int my_ts = t.getTimeStamp();
-	SparseBitSet sbs = new SparseBitSet();
-	sbs.set(my_ts);
+	IntSet current = new IntOpenHashSet();
+	current.add(my_ts);
+	
 	for (SimpleCluster sc : t.getClusters()) {
 	    // each cluster generates {n \choose 2} Integer-Integer pairs
 	    IntSet objectset = sc.getObjects();
 	    // change from iterable to random accessible
 	    int[] cluster = objectset.toArray(new int[objectset.size()]);
-
 	    // pair-wise join to create edge segment
 	    for (int i = 0; i < cluster.length; i++) {
 		for (int j = i + 1; j < cluster.length; j++) {
-		    // ensures that outer is always smaller than
-		    // inner
+		    // ensures that outer is always smaller than inner
 		    int outer = cluster[i];
 		    int inner = cluster[j];
 		    if (outer > inner) {
@@ -54,10 +51,8 @@ public class EdgeSegmentor
 			outer = inner;
 			inner = tmp;
 		    }
-		    Tuple2<Tuple2<Integer, Integer>, SparseBitSet> segment 
-		    	= new Tuple2<Tuple2<Integer, Integer>, SparseBitSet>(
-			    new Tuple2<Integer, Integer>(outer, inner), sbs);
-		    
+		    Tuple2<Tuple2<Integer, Integer>, IntSet> segment = new Tuple2<Tuple2<Integer, Integer>, IntSet>(
+			    new Tuple2<Integer, Integer>(outer, inner), current);
 		    results.add(segment);
 		}
 	    }

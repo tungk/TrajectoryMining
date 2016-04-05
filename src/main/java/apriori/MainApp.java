@@ -1,5 +1,6 @@
 package apriori;
 
+import it.unimi.dsi.fastutil.ints.IntSet;
 import model.SnapshotClusters;
 
 import org.apache.log4j.Level;
@@ -52,10 +53,10 @@ public class MainApp {
 	AprioriLayout al = new AprioriLayout(K, M, L, G);
 	al.setInput(CLUSTERS);
 	//starting apriori
-	JavaRDD<Iterable<SparseBitSet>> output = al.runLogic();
+	JavaRDD<Iterable<IntSet>> output = al.runLogic();
 	
-	for(Iterable<SparseBitSet> each_output : output.collect()) {
-	    for(SparseBitSet sbs : each_output) {
+	for(Iterable<IntSet> each_output : output.collect()) {
+	    for(IntSet sbs : each_output) {
 		System.out.println(sbs);
 	    }
 	}

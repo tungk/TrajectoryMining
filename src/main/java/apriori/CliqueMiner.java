@@ -1,5 +1,8 @@
 package apriori;
 
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -7,13 +10,15 @@ import java.util.HashSet;
 import org.apache.spark.api.java.function.Function;
 
 import scala.Tuple2;
+import util.SparseBitSetUtil;
+
 import java.util.Iterator;
 
 import com.zaxxer.sparsebits.SparseBitSet;
 
 public class CliqueMiner
 	implements
-	Function<Tuple2<Integer, Iterable<Tuple2<Integer, SparseBitSet>>>, Iterable<SparseBitSet>> {
+	Function<Tuple2<Integer, Iterable<Tuple2<Integer, IntSet>>>, Iterable<IntSet>> {
     /**
      * 
      */
@@ -30,38 +35,46 @@ public class CliqueMiner
     }
 
     @Override
-    public Iterable<SparseBitSet> call(
-	    Tuple2<Integer, Iterable<Tuple2<Integer, SparseBitSet>>> v1)
+    public Iterable<IntSet> call(
+	    Tuple2<Integer, Iterable<Tuple2<Integer, IntSet>>> v1)
 	    throws Exception {
-	
-	Iterator<Tuple2<Integer, SparseBitSet>> tmp = v1._2.iterator();
+	Iterator<Tuple2<Integer, IntSet>> tmp = v1._2.iterator();
+	System.out.println(v1._1);
 	int count = 0;
 	while(tmp.hasNext()) {
 	    count++;
-	    tmp.next();
+	    Tuple2<Integer, IntSet> tuple = tmp.next();
+	    //print out input for debugging purpose
+	    System.out.println(tuple._1 + "\t" + tuple._2);
 	}
 	System.out.printf("Edges for %d is %d\n", v1._1, count);
+	//time anchors to record running time
+	long start,end;
 	// use Apriori method for mining the cliques in bottom-up manner
 	// each edge represents a 2-frequent itemset
 	// building higher frequent itemset iteratively
-	HashMap<SparseBitSet, SparseBitSet> timestamp_store = new HashMap<>();
+	HashMap<IntSet, IntSet> timestamp_store = new HashMap<>();
 	// ArrayList<ArrayList<SparseBitSet>> candidate_set = new
 	// ArrayList<>();
-	ArrayList<SparseBitSet> ground = new ArrayList<>();
-	ArrayList<SparseBitSet> output = new ArrayList<>();
-	ArrayList<SparseBitSet> candidate;
-
-	for (Tuple2<Integer, SparseBitSet> edge : v1._2) {
-	    SparseBitSet cluster = new SparseBitSet();
-	    cluster.set(edge._1);
-	    cluster.set(v1._1);
+	ArrayList<IntSet> ground = new ArrayList<>();
+	ArrayList<IntSet> output = new ArrayList<>();
+	ArrayList<IntSet> candidate;
+	start = System.currentTimeMillis();
+	for (Tuple2<Integer, IntSet> edge : v1._2) {
+	    IntSet cluster = new IntOpenHashSet();
+	    cluster.add(edge._1);
+	    cluster.add(v1._1);
 	    timestamp_store.put(cluster, edge._2);
 	    ground.add(cluster);
 	}
+	end = System.currentTimeMillis();
+	System.out.println("Initialization: " + (end-start) + " ms");
 	candidate = ground;
+	int level = 1;
 	while (true) {
-	    ArrayList<SparseBitSet> nextLevel = new ArrayList<>();
-	    HashSet<SparseBitSet> duplicates = new HashSet<>(); // do
+	    start = System.currentTimeMillis();
+	    ArrayList<IntSet> nextLevel = new ArrayList<>();
+	    HashSet<IntSet> duplicates = new HashSet<>(); // do
 								// not
 								// add
 								// duplicate
@@ -71,19 +84,22 @@ public class CliqueMiner
 								// next
 								// level
 	    for (int i = 0; i < candidate.size(); i++) {
-		SparseBitSet cand = candidate.get(i);
+		IntSet cand = candidate.get(i);
 		boolean pruned = false;
 		for (int j = 0; j < ground.size(); j++) {
-		    SparseBitSet grd = ground.get(j);
-		    SparseBitSet newc = SparseBitSet.or(grd, cand);
+		    IntSet grd = ground.get(j);
+		    IntSet newc = new IntOpenHashSet();
+		    newc.addAll(grd);
+		    newc.addAll(cand);
 		    if (newc.equals(cand)) {
 			// a candidate should not join with its subset;
 			continue;
 		    }
-		    SparseBitSet timestamps = SparseBitSet
-			    .and(timestamp_store.get(grd),
-				    timestamp_store.get(cand));
-		    if (timestamps.cardinality() >= K) {
+		    //find intersections
+		    IntSet timestamps = new IntOpenHashSet();
+		    timestamps.addAll(timestamp_store.get(grd));
+		    timestamps.retainAll(timestamp_store.get(cand));
+		    if (timestamps.size() >= K) {
 			// the new candidate is significant
 			if (!duplicates.contains(newc)) {
 			    nextLevel.add(newc);
@@ -96,17 +112,21 @@ public class CliqueMiner
 		    }
 		}
 		if (!pruned) {
-		    if (cand.cardinality() >= M) {
+		    if (cand.size() >= M) {
 			output.add(cand);
 		    }
 		}
 	    }
+	    end = System.currentTimeMillis();
+	    System.out.println("["+v1._1+"] Object-Grow: " + level+", " + (end-start) + " ms");
+	    level++;
 	    if (nextLevel.isEmpty()) {
 		break;
 	    } else {
 		candidate = nextLevel;
 	    }
 	}
+	System.out.println("Finished");
 	return output;
     }
 
