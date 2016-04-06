@@ -1,6 +1,6 @@
 package apriori;
 
-import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.ints.IntSortedSet;
 
 import org.apache.spark.api.java.function.Function2;
 
@@ -10,10 +10,10 @@ import org.apache.spark.api.java.function.Function2;
  *
  */
 public class EdgeReducer implements
-	Function2<IntSet, IntSet, IntSet> {
+	Function2<IntSortedSet, IntSortedSet, IntSortedSet> {
     private static final long serialVersionUID = -522176775845102773L;
     @Override
-    public IntSet call(IntSet v1, IntSet v2) throws Exception {
+    public IntSortedSet call(IntSortedSet v1, IntSortedSet v2) throws Exception {
 	v1.addAll(v2);
 	return v1;
     }

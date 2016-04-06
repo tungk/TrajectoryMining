@@ -1,7 +1,8 @@
 package apriori;
 
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntRBTreeSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.ints.IntSortedSet;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -22,8 +23,8 @@ public class AprioriTest {
 	    String line;
 	    int line_num = 0;
 	    int id = 0;
-	    Tuple2<Integer, Iterable<Tuple2<Integer,IntSet>>> input;
-	    ArrayList<Tuple2<Integer,IntSet>> sets = new ArrayList<>();
+	    Tuple2<Integer, Iterable<Tuple2<Integer,IntSortedSet>>> input;
+	    ArrayList<Tuple2<Integer,IntSortedSet>> sets = new ArrayList<>();
 	    while((line = br.readLine()) != null) {
 		if(line_num == 0) {
 		    line_num = 1;
@@ -32,16 +33,16 @@ public class AprioriTest {
 		    String[] parts = line.split("\t");
 		    int tid = Integer.parseInt(parts[0]);
 		    String[] t_set_strings = parts[1].substring(1,parts[1].length() -1).split(", ");
-		    IntSet t_set = new IntOpenHashSet();
+		    IntSortedSet t_set = new IntRBTreeSet();
 		    for(String t_set_string : t_set_strings) {
 			t_set.add(Integer.parseInt(t_set_string));
 		    }
-		    sets.add(new Tuple2<Integer,IntSet>(tid, t_set));
+		    sets.add(new Tuple2<Integer,IntSortedSet>(tid, t_set));
 		}
 	    }
 	    br.close();
-	    input = new Tuple2<Integer, Iterable<Tuple2<Integer,IntSet>>>(id, sets);
-	    CliqueMiner cm = new CliqueMiner(30, 5, 5, 5);
+	    input = new Tuple2<Integer, Iterable<Tuple2<Integer,IntSortedSet>>>(id, sets);
+	    CliqueMiner cm = new CliqueMiner(30, 1, 1, 1);
 	    Iterable<IntSet> output = cm.call(input);
 	    for(IntSet out : output) {
 		System.out.println(out);

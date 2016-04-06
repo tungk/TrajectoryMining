@@ -1,7 +1,9 @@
 package apriori;
 
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntRBTreeSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.ints.IntSortedSet;
 
 import java.util.ArrayList;
 
@@ -21,18 +23,18 @@ import scala.Tuple2;
  */
 public class EdgeSegmentor
 	implements
-	PairFlatMapFunction<SnapshotClusters, Tuple2<Integer, Integer>, IntSet> {
+	PairFlatMapFunction<SnapshotClusters, Tuple2<Integer, Integer>, IntSortedSet> {
     /**
      * 
      */
     private static final long serialVersionUID = 4125348116998762164L;
 
     @Override
-    public Iterable<Tuple2<Tuple2<Integer, Integer>, IntSet>> call(
+    public Iterable<Tuple2<Tuple2<Integer, Integer>, IntSortedSet>> call(
 	    SnapshotClusters t) throws Exception {
-	ArrayList<Tuple2<Tuple2<Integer, Integer>, IntSet>> results = new ArrayList<>();
+	ArrayList<Tuple2<Tuple2<Integer, Integer>, IntSortedSet>> results = new ArrayList<>();
 	int my_ts = t.getTimeStamp();
-	IntSet current = new IntOpenHashSet();
+	IntSortedSet current = new IntRBTreeSet();
 	current.add(my_ts);
 	
 	for (SimpleCluster sc : t.getClusters()) {
@@ -51,7 +53,7 @@ public class EdgeSegmentor
 			outer = inner;
 			inner = tmp;
 		    }
-		    Tuple2<Tuple2<Integer, Integer>, IntSet> segment = new Tuple2<Tuple2<Integer, Integer>, IntSet>(
+		    Tuple2<Tuple2<Integer, Integer>, IntSortedSet> segment = new Tuple2<Tuple2<Integer, Integer>, IntSortedSet>(
 			    new Tuple2<Integer, Integer>(outer, inner), current);
 		    results.add(segment);
 		}

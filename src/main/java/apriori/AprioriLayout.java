@@ -1,6 +1,7 @@
 package apriori;
 
 import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.ints.IntSortedSet;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -26,6 +27,7 @@ public class AprioriLayout implements Serializable {
     private EdgeFilter edge_filter;
     private EdgeMapper edge_mapper;
     private CliqueMiner clique_miner;
+    private EdgeLSimplification edge_simplifier;
     
     public AprioriLayout(int k, int m, int l, int g) {
 	K = k; 
@@ -37,6 +39,7 @@ public class AprioriLayout implements Serializable {
 	edge_filter = new EdgeFilter(K,M,L,G);
 	edge_mapper = new EdgeMapper();
 	clique_miner = new CliqueMiner(K,M,L,G);
+	edge_simplifier = new EdgeLSimplification(K, L, G);
     }
 
     public void setInput(JavaRDD<SnapshotClusters> CLUSTERS) {
@@ -44,20 +47,21 @@ public class AprioriLayout implements Serializable {
     }
 
     public JavaRDD<Iterable<IntSet>> runLogic() {
-	JavaPairRDD<Tuple2<Integer, Integer>, IntSet> stage1 = input.flatMapToPair(edge_seg);
+	JavaPairRDD<Tuple2<Integer, Integer>, IntSortedSet> stage1 = input.flatMapToPair(edge_seg);
 	System.out.println("Edges in stage1 " + stage1.count());
-	JavaPairRDD<Tuple2<Integer, Integer>, IntSet> stage2 = stage1.reduceByKey(edge_reducer);
+	JavaPairRDD<Tuple2<Integer, Integer>, IntSortedSet> stage2 = stage1.reduceByKey(edge_reducer);
 	System.out.println("Edges in stage2 " + stage2.count());
-	JavaPairRDD<Tuple2<Integer, Integer>, IntSet> stage3 = stage2.filter(edge_filter);
+	JavaPairRDD<Tuple2<Integer, Integer>, IntSortedSet> stage3 = stage2.mapValues(edge_simplifier)
+		.filter(edge_filter);
 	System.out.println("Totoal keys in stage3: " + stage3.count());
-	JavaPairRDD<Integer, Iterable<Tuple2<Integer, IntSet>>> stage4 
+	JavaPairRDD<Integer, Iterable<Tuple2<Integer, IntSortedSet>>> stage4 
 		= stage3.mapToPair(edge_mapper)
 		.groupByKey(1170); //39 executor, each takes 3 cores.
 	
-	Map<Integer, Iterable<Tuple2<Integer, IntSet>>> stage4result = stage4.collectAsMap();
+	Map<Integer, Iterable<Tuple2<Integer, IntSortedSet>>> stage4result = stage4.collectAsMap();
 	System.out.println("Stage4 Partition Result:");
-	for(Map.Entry<Integer, Iterable<Tuple2<Integer, IntSet>>> entry : stage4result.entrySet()) {
-	    Iterator<Tuple2<Integer,IntSet>> itr = entry.getValue().iterator();
+	for(Map.Entry<Integer, Iterable<Tuple2<Integer, IntSortedSet>>> entry : stage4result.entrySet()) {
+	    Iterator<Tuple2<Integer,IntSortedSet>> itr = entry.getValue().iterator();
 	    int count = 0;
 	    while(itr.hasNext()) {
 		count++;
@@ -66,12 +70,6 @@ public class AprioriLayout implements Serializable {
 	    System.out.println(entry.getKey() + "\t" + count);
 	}
 	JavaRDD<Iterable<IntSet>> stage5 = stage4.map(clique_miner);
-//	JavaRDD<Iterable<SparseBitSet>> clusters = input.flatMapToPair(edge_seg)
-//	.aggregateByKey(new SparseBitSet(),edge_reduce, edge_reduce)
-//	.filter(edge_filter) // next we map all these edges based on their lower-end (the end with smaller IDs)
-//	.mapToPair(edge_mapper)
-//	.groupByKey(1950)
-//	.map(clique_miner);
 	return stage5;
     }
 
