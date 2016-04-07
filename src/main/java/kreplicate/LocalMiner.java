@@ -1,12 +1,12 @@
 package kreplicate;
 
+import it.unimi.dsi.fastutil.ints.IntSet;
+
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
 
 import model.SelfAdjustPattern;
 import model.SnapshotClusters;
@@ -22,7 +22,7 @@ import common.SerializableComparator;
 
 
 
-public class LocalMiner implements Function<Iterable<SnapshotClusters>,ArrayList<HashSet<Integer>>>{
+public class LocalMiner implements Function<Iterable<SnapshotClusters>,ArrayList<IntSet>>{
     private static final long serialVersionUID = 416636556315652980L;
     private int K, M, L, G;
 
@@ -36,7 +36,7 @@ public class LocalMiner implements Function<Iterable<SnapshotClusters>,ArrayList
     private ArrayList<SnapshotClusters> input;
 
     @Override
-    public ArrayList<HashSet<Integer>> call(
+    public ArrayList<IntSet> call(
 	    Iterable<SnapshotClusters> v1) throws Exception {
 	input = new ArrayList<SnapshotClusters>();
 	Iterator<SnapshotClusters> v1itr = v1.iterator();
@@ -71,7 +71,7 @@ public class LocalMiner implements Function<Iterable<SnapshotClusters>,ArrayList
 	//TODO:: delete till here
 //	System.out.println("input:"+input);
 	long start= System.currentTimeMillis();
-	ArrayList<HashSet<Integer>> mined_clusters = mining();
+	ArrayList<IntSet> mined_clusters = mining();
 	System.out.println(total_clusters + " clusters in " +  input.size()+" timestamps, takes " + (
 		System.currentTimeMillis() - start) + " ms");
 	System.out.println(input);
@@ -79,15 +79,15 @@ public class LocalMiner implements Function<Iterable<SnapshotClusters>,ArrayList
     }
     
 
-    public ArrayList<HashSet<Integer>> mining() {
+    public ArrayList<IntSet> mining() {
 //	long t_start, t_end;
 	
-	ArrayList<HashSet<Integer>> result = new ArrayList<>();
+	ArrayList<IntSet> result = new ArrayList<>();
 	if (input.size() < L) {
 	    return result; // not enough inputs
 	}
 	ArrayList<SelfAdjustPattern> candidates = new ArrayList<>();
-	HashSet<HashSet<Integer>> obj_index = new HashSet<>();
+	HashSet<IntSet> obj_index = new HashSet<>();
 	// insert clusters at snapshot 1 to be the pattern
 	SnapshotClusters initial_sp = input.get(0);
 //	t_start = System.currentTimeMillis();
@@ -140,7 +140,7 @@ public class LocalMiner implements Function<Iterable<SnapshotClusters>,ArrayList
 			    candidates.add(np);
 			}
 		    } else if (comp.getResult() == Result.SUB || comp.getResult() == Result.NONE) {
-			Set<Integer> commons = comp.getIntersect();
+			IntSet commons = comp.getIntersect();
 			if (commons.size() >= M 
 			&& !subsetOf(obj_index, commons)) {
 			    // create a new pattern;
@@ -266,10 +266,10 @@ public class LocalMiner implements Function<Iterable<SnapshotClusters>,ArrayList
 	    System.out.println(in);
 	}
 
-	ArrayList<HashSet<Integer>> result = lm.call(input);
+	ArrayList<IntSet> result = lm.call(input);
 
 	int index = 0;
-	for (HashSet<Integer> cluster : result) {
+	for (IntSet cluster : result) {
 	    System.out.println((index++) + "\t" + cluster);
 	}
     }
@@ -279,29 +279,30 @@ public class LocalMiner implements Function<Iterable<SnapshotClusters>,ArrayList
     public void clear() {
     }
     
-    private static boolean subsetOf(Collection<HashSet<Integer>> grounds, Set<Integer> test) {
-	for(HashSet<Integer> ground : grounds) {
-	    if(ground.containsAll(test)) {
+    private static boolean subsetOf(Iterable<IntSet> grounds,
+	    IntSet test) {
+	for (IntSet ground : grounds) {
+	    if (ground.containsAll(test)) {
 		return true;
 	    }
-	} 
+	}
 	return false;
     }
-    
-    private static void addIndex(HashSet<HashSet<Integer>> obj_index,
-	    HashSet<Integer> objects) {	
-	Iterator<HashSet<Integer>> index_itr = obj_index.iterator();
+
+    private static void addIndex(HashSet<IntSet> obj_index,
+	    IntSet objects) {
+	Iterator<IntSet> index_itr = obj_index.iterator();
 	boolean contained = false;
-	while(index_itr.hasNext()) {
-	    HashSet<Integer> index = index_itr.next();
-	    if(objects.containsAll(index)) {
+	while (index_itr.hasNext()) {
+	    IntSet index = index_itr.next();
+	    if (objects.containsAll(index)) {
 		index_itr.remove();
-	    } else if(index.containsAll(objects)) {
+	    } else if (index.containsAll(objects)) {
 		contained = true;
 		break;
 	    }
 	}
-	if(!contained) {
+	if (!contained) {
 	    obj_index.add(objects);
 	}
     }

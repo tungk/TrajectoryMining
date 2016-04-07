@@ -1,5 +1,8 @@
 package model;
 
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -14,7 +17,7 @@ import java.util.HashSet;
  */
 public class SelfAdjustPattern {
     private int M, L, K, G;
-    private HashSet<Integer> objects;
+    private IntSet objects;
     private ArrayList<Integer> tstamps;
     // design some indicators on temporal aspects;
     private boolean ob_valid;
@@ -22,7 +25,7 @@ public class SelfAdjustPattern {
 				// starts;
 
     public SelfAdjustPattern(int m, int l, int k, int g) {
-	objects = new HashSet<>();
+	objects = new IntOpenHashSet();
 	tstamps = new ArrayList<>();
 	ob_valid = true;
 	M = m;
@@ -49,7 +52,7 @@ public class SelfAdjustPattern {
      * 
      * @return
      */
-    public HashSet<Integer> getObjects() {
+    public IntSet getObjects() {
 	return objects;
     }
 

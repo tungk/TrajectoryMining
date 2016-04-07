@@ -1,5 +1,8 @@
 package util;
 
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
+
 import java.io.Serializable;
 import java.util.Set;
 
@@ -17,14 +20,14 @@ public class SetComp implements Serializable{
 		SUB,
 		NONE,
 	}
-	private Set<Integer> intersect;
+	private IntSet intersect;
 	private Result type;
 	public SetComp(Result r, Set<Integer> common) {
 		type = r;
-		intersect = common;
+		intersect = new IntOpenHashSet(common);
 	}
 	
-	public Set<Integer> getIntersect() {
+	public IntSet getIntersect() {
 		return intersect; 
 	}
 	

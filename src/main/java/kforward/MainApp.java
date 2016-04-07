@@ -57,7 +57,10 @@ public class MainApp {
    	
    	JavaRDD<String> input = context.textFile(hdfs_input, hdfs_read_partitions);
    	ClusteringMethod cm = new BasicClustering();
-   	JavaRDD<SnapshotClusters> CLUSTERS = cm.doClustering(input, M);
+   	JavaRDD<SnapshotClusters> CLUSTERS = cm.doClustering(input, M, Integer.parseInt(AppProperties
+   		.getProperty("eps")), Integer.parseInt(AppProperties
+   	   		.getProperty("minpts")), Integer.parseInt(AppProperties
+   		.getProperty("snapshot_partitions")));
    	KForwardLayout KFL = new KForwardLayout(K,L,M,G);
 	KFL.setInput(CLUSTERS);
    	JavaPairRDD<Integer, ArrayList<HashSet<Integer>>> result = KFL.runLogic();

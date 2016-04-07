@@ -1,8 +1,9 @@
 package kreplicate;
 
+import it.unimi.dsi.fastutil.ints.IntSet;
+
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashSet;
 
 import model.SnapshotClusters;
 
@@ -29,8 +30,8 @@ public class KReplicateLayout implements Serializable {
 	Clusters = cLUSTERS;
     }
 
-    public JavaPairRDD<Integer, ArrayList<HashSet<Integer>>> runLogic() {
-	JavaPairRDD<Integer, ArrayList<HashSet<Integer>>> result = Clusters
+    public JavaPairRDD<Integer, ArrayList<IntSet>> runLogic() {
+	JavaPairRDD<Integer, ArrayList<IntSet>> result = Clusters
 		.flatMapToPair(new KReplicatePartitioner(2 * K + G))
 		.groupByKey().mapValues(new LocalMiner(K, M, L, G));
 
