@@ -33,11 +33,14 @@ public class SinglePattern {
 	this.input = input;
     }
 
-    public ArrayList<IntSet> runLogic() {
+    public HashSet<IntSet> runLogic() {
 	List<SnapshotClusters> snapshots = input.collect();
-
+	System.out.println(snapshots.size());
 	ArrayList<SnapshotClusters> snaps = new ArrayList<>(snapshots);
-
+	for (SnapshotClusters sc : snaps) {
+	    System.out.println(sc);
+	}
+	HashSet<IntSet> results = new HashSet<>();
 	Collections.sort(snaps, new SerializableComparator<SnapshotClusters>() {
 	    private static final long serialVersionUID = -2377099135785663734L;
 
@@ -47,6 +50,23 @@ public class SinglePattern {
 	    }
 	});
 
+	for (int i = 0; i < snaps.size(); i++) {
+	    for (int j = i + 1; j <= i + 2 * K + G; j++) {
+		if (j >= snaps.size()) {
+		    j = snaps.size() - 1;
+		}
+		ArrayList<IntSet> tmp = localMiner(snaps, i, j);
+		for (IntSet tt : tmp) {
+		    System.out.println(tt);
+		    results.add(tt);
+		}
+	    }
+	}
+	return results;
+    }
+
+    public ArrayList<IntSet> localMiner(ArrayList<SnapshotClusters> snaps,
+	    int start, int end) {
 	ArrayList<IntSet> result = new ArrayList<>();
 	if (snaps.size() < L) {
 	    return result; // not enough inputs
@@ -65,8 +85,7 @@ public class SinglePattern {
 		candidates.add(p);
 	    }
 	}
-	int end = snaps.size();
-	for (int i = 1; i < end; i++) {
+	for (int i = start; i <= end; i++) {
 	    SnapshotClusters current_snap = snaps.get(i);
 	    int current_ts = current_snap.getTimeStamp();
 	    // join current_snapshots with candidate set to see
@@ -148,8 +167,7 @@ public class SinglePattern {
 	return result;
     }
 
-    private static boolean subsetOf(Iterable<IntSet> grounds,
-	    IntSet test) {
+    private static boolean subsetOf(Iterable<IntSet> grounds, IntSet test) {
 	for (IntSet ground : grounds) {
 	    if (ground.containsAll(test)) {
 		return true;
@@ -158,8 +176,7 @@ public class SinglePattern {
 	return false;
     }
 
-    private static void addIndex(HashSet<IntSet> obj_index,
-	    IntSet objects) {
+    private static void addIndex(HashSet<IntSet> obj_index, IntSet objects) {
 	Iterator<IntSet> index_itr = obj_index.iterator();
 	boolean contained = false;
 	while (index_itr.hasNext()) {

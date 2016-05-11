@@ -1,5 +1,7 @@
 package apriori;
 
+import java.util.List;
+
 import it.unimi.dsi.fastutil.ints.IntSet;
 import model.SnapshotClusters;
 
@@ -8,6 +10,7 @@ import org.apache.log4j.Logger;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.function.Function;
 
 import cluster.BasicClustering;
 import cluster.ClusteringMethod;
@@ -81,12 +84,26 @@ public class MainApp {
 	AprioriLayout al = new AprioriLayout(K, M, L, G, clique_miner_partitions);
 	al.setInput(CLUSTERS);
 	//starting apriori
-	JavaRDD<Iterable<IntSet>> output = al.runLogic();
+	JavaRDD<IntSet> output = al.runLogic().filter(
+		new Function<IntSet,Boolean>(){
+		    private static final long serialVersionUID = 1854327010963412841L;
+		    @Override
+		    public Boolean call(IntSet v1) throws Exception {
+			return v1.size() > 0;
+		    }
+		}); // we do not need distinct here, since the star-based partition guranteed distinctness
+	//need further removal of duplicates
+	//if a pattern (1,2,3,4) is found, it may like found (2,3,4) from other machine
 	
-	for(Iterable<IntSet> each_output : output.collect()) {
-	    for(IntSet sbs : each_output) {
-		System.out.println(sbs);
-	    }
+	List<IntSet> grounds = output.collect();
+//	System.out.println("Before DR");
+//	for(IntSet each_output : grounds) {
+//	    System.out.println(each_output);
+//	}
+	List<IntSet> duplicate_removed = output.filter(new DuplicateClusterFilter(grounds)).collect();
+//	System.out.println("After DR");
+	for(IntSet each_output : duplicate_removed) {
+	    System.out.println(each_output);
 	}
 	context.close();
     }

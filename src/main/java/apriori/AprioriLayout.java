@@ -8,8 +8,10 @@ import java.util.Map;
 
 import model.SnapshotClusters;
 
+import org.apache.spark.Partitioner;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.storage.StorageLevel;
 
 import scala.Tuple2;
 import java.util.Iterator;
@@ -42,7 +44,7 @@ public class AprioriLayout implements Serializable {
 	edge_mapper = new EdgeMapper();
 	clique_miner = new CliqueMiner(K,M,L,G);
 	edge_simplifier = new EdgeLSimplification(K, L, G);
-	clique_partitions = 1170; //39 executor, each takes 3 cores, each core execute 10 tasks
+	clique_partitions = 1170; //119 executors
     }
     
     public AprioriLayout(int k, int m, int l, int g, int pars) {
@@ -64,20 +66,31 @@ public class AprioriLayout implements Serializable {
 	input = CLUSTERS;
     }
 
-    public JavaRDD<Iterable<IntSet>> runLogic() {
-	JavaPairRDD<Tuple2<Integer, Integer>, IntSortedSet> stage1 = input.flatMapToPair(edge_seg);
-	System.out.println("Edges in stage1 " + stage1.count());
-	JavaPairRDD<Tuple2<Integer, Integer>, IntSortedSet> stage2 = stage1.reduceByKey(edge_reducer);
-	System.out.println("Edges in stage2 " + stage2.count());
-	JavaPairRDD<Tuple2<Integer, Integer>, IntSortedSet> stage3 = stage2.mapValues(edge_simplifier)
-		.filter(edge_filter);
-	System.out.println("Totoal keys in stage3: " + stage3.count());
+    public JavaRDD<IntSet> runLogic() {
+	
+	//Create edges based on the clusters at each snapshot
+	JavaPairRDD<Tuple2<Integer, Integer>, IntSortedSet> stage1 = input.flatMapToPair(edge_seg)
+		.cache();
+	System.out.println("Total edges from all snapshots:\t" + stage1.count());
+	
+	//Remove edges which are not candidate sequences
+	JavaPairRDD<Tuple2<Integer, Integer>, IntSortedSet> stage2 = stage1.reduceByKey(edge_reducer)
+		.cache();
+	System.out.println("Condensed edges in connection graph:\t"+stage2.count());
+	
+	JavaPairRDD<Tuple2<Integer, Integer>, IntSortedSet> stage3 = stage2
+		.mapValues(edge_simplifier)
+		.filter(edge_filter)
+		.cache();
+	System.out.println("Simplified edges:\t" + stage3.count());
+	
+	//Create stars for each leading vertex
 	JavaPairRDD<Integer, Iterable<Tuple2<Integer, IntSortedSet>>> stage4 
 		= stage3.mapToPair(edge_mapper)
-		.groupByKey(clique_partitions); 
-	
+		.groupByKey(clique_partitions)
+		.cache(); 
 	Map<Integer, Iterable<Tuple2<Integer, IntSortedSet>>> stage4result = stage4.collectAsMap();
-	System.out.println("Stage4 Partition Result:");
+	System.out.println("Star size distribution:");
 	for(Map.Entry<Integer, Iterable<Tuple2<Integer, IntSortedSet>>> entry : stage4result.entrySet()) {
 	    Iterator<Tuple2<Integer,IntSortedSet>> itr = entry.getValue().iterator();
 	    int count = 0;
@@ -87,7 +100,12 @@ public class AprioriLayout implements Serializable {
 	    }
 	    System.out.println(entry.getKey() + "\t" + count);
 	}
-	JavaRDD<Iterable<IntSet>> stage5 = stage4.map(clique_miner);
+	
+	
+	//Apriori mining for each star
+	JavaRDD<IntSet> stage5 = 
+		stage4.flatMap(clique_miner)
+		.cache();
 	return stage5;
     }
 

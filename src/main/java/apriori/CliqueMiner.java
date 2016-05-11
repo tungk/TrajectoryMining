@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.FlatMapFunction;
 import scala.Tuple2;
 import java.util.Iterator;
 
@@ -21,7 +21,7 @@ import java.util.Iterator;
  */
 public class CliqueMiner
 	implements
-	Function<Tuple2<Integer, Iterable<Tuple2<Integer, IntSortedSet>>>, Iterable<IntSet>> {
+	FlatMapFunction<Tuple2<Integer, Iterable<Tuple2<Integer, IntSortedSet>>>, IntSet> {
 
     private static final long serialVersionUID = 714635813712741661L;
 
@@ -91,13 +91,13 @@ public class CliqueMiner
 		boolean pruned = false;
 		for (int j = 0; j < ground.size(); j++) {
 		    IntSet grd = ground.get(j);
+		    if(cand.containsAll(grd)) {
+			//a candidate should not join with its subset;
+			continue;
+		    }
 		    IntSet newc = new IntOpenHashSet();
 		    newc.addAll(grd);
 		    newc.addAll(cand);
-		    if (newc.equals(cand)) {
-			// a candidate should not join with its subset;
-			continue;
-		    }
 		    // find intersections
 		    IntSortedSet timestamps = new IntRBTreeSet();
 		    timestamps.addAll(timestamp_store.get(grd));
@@ -120,7 +120,7 @@ public class CliqueMiner
 		}
 		if (!pruned) {
 		    IntSortedSet time_stamps = timestamp_store.get(cand);
-		    if (simplifier.call(time_stamps).size() > K) {
+		    if (simplifier.call(time_stamps).size() >= K) {
 			// time_stamp is greater than K
 			if (cand.size() >= M) {
 			    output.add(cand);

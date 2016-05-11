@@ -1,5 +1,8 @@
 package single;
 
+import java.util.HashSet;
+
+import it.unimi.dsi.fastutil.ints.IntSet;
 import model.SnapshotClusters;
 
 import org.apache.log4j.Level;
@@ -61,7 +64,7 @@ public class MainApp {
 
 	String hdfs_input = AppProperties.getProperty("hdfs_input");
 	String name = AppProperties.getProperty("appName");
-	name = name + "Apriori-K" + K + "-L" + L + "-M" + M + "-G" + G + "-Par"
+	name = name + "Single-K" + K + "-L" + L + "-M" + M + "-G" + G + "-Par"
 		+ hdfs_partitions + "MinP" + Constants.MINPTS + "EPS"
 		+ Constants.EPS;
 	Logger.getLogger("org").setLevel(Level.OFF);
@@ -74,7 +77,10 @@ public class MainApp {
 		M, snapshot_partitions);
 	
 	SinglePattern sp = new SinglePattern(CLUSTERS, M, L, K, G);
-	
+	HashSet<IntSet> result = sp.runLogic();
+	for(IntSet r : result) {
+	    System.out.println(r);
+	}
 	context.close();
     }
 
