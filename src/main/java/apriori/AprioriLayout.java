@@ -3,21 +3,18 @@ package apriori;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSortedSet;
 
-import java.io.Serializable;
 import java.util.Map;
 
 import model.SnapshotClusters;
 
-import org.apache.spark.Partitioner;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.storage.StorageLevel;
 
 import scala.Tuple2;
 import java.util.Iterator;
 
 
-public class AprioriLayout implements Serializable {
+public class AprioriLayout implements AlgoLayout {
     private static final long serialVersionUID = 1013697935052286484L;
     private JavaRDD<SnapshotClusters> input;
     private int K, L, M, G;
@@ -29,7 +26,8 @@ public class AprioriLayout implements Serializable {
     private EdgeReducer edge_reducer;
     private EdgeFilter edge_filter;
     private EdgeMapper edge_mapper;
-    private CliqueMiner clique_miner;
+//    private CliqueMiner clique_miner;
+    private EagerCliqueMiner clique_miner;
     private EdgeLSimplification edge_simplifier;
     
     
@@ -42,9 +40,10 @@ public class AprioriLayout implements Serializable {
 	edge_reducer = new EdgeReducer();
 	edge_filter = new EdgeFilter(K,M,L,G);
 	edge_mapper = new EdgeMapper();
-	clique_miner = new CliqueMiner(K,M,L,G);
+//	clique_miner = new CliqueMiner(K,M,L,G);
+	clique_miner = new EagerCliqueMiner(K,M,L,G); 
 	edge_simplifier = new EdgeLSimplification(K, L, G);
-	clique_partitions = 1170; //119 executors
+	clique_partitions = 195; //32 executors
     }
     
     public AprioriLayout(int k, int m, int l, int g, int pars) {
@@ -56,16 +55,18 @@ public class AprioriLayout implements Serializable {
  	edge_reducer = new EdgeReducer();
  	edge_filter = new EdgeFilter(K,M,L,G);
  	edge_mapper = new EdgeMapper();
- 	clique_miner = new CliqueMiner(K,M,L,G);
+// 	clique_miner = new CliqueMiner(K,M,L,G);
+ 	clique_miner = new EagerCliqueMiner(K,M,L,G); 
  	edge_simplifier = new EdgeLSimplification(K, L, G);
  	clique_partitions = pars;
      }
     
-
+    @Override
     public void setInput(JavaRDD<SnapshotClusters> CLUSTERS) {
 	input = CLUSTERS;
     }
 
+    @Override
     public JavaRDD<IntSet> runLogic() {
 	
 	//Create edges based on the clusters at each snapshot
@@ -100,7 +101,6 @@ public class AprioriLayout implements Serializable {
 	    }
 	    System.out.println(entry.getKey() + "\t" + count);
 	}
-	
 	
 	//Apriori mining for each star
 	JavaRDD<IntSet> stage5 = 

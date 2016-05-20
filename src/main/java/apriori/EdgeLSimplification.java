@@ -29,6 +29,10 @@ public class EdgeLSimplification implements Function<IntSortedSet, IntSortedSet>
      */
     @Override	
     public IntSortedSet call(IntSortedSet v1) throws Exception {
+	if(v1.size() < K) {
+	    v1.clear();
+	    return v1;
+	}
 	//cast set into arrays, since v1 is sorted, the value array is sorted automatically
 	int[] value = v1.toArray(new int[v1.size()]);
 	//remove the unqualified consecutive parts of timestamps

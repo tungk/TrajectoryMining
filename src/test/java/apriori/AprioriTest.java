@@ -15,7 +15,7 @@ public class AprioriTest {
     
     public static void main(String[] args) {
 	//prepare input from file
-	String filename = "C:/Users/a0048267/Desktop/input5.txt";
+	String filename = "C:/Users/a0048267/Desktop/input6.txt";
 	
 	try {
 	    FileReader fr = new FileReader(filename);
@@ -42,9 +42,14 @@ public class AprioriTest {
 	    }
 	    br.close();
 	    input = new Tuple2<Integer, Iterable<Tuple2<Integer,IntSortedSet>>>(id, sets);
-	    CliqueMiner cm = new CliqueMiner(10, 3, 1, 1);
-	    Iterable<IntSet> output = cm.call(input);
-	    for(IntSet out : output) {
+//	    CliqueMiner cm = new CliqueMiner(15, 9, 3, 4);
+//	    Iterable<IntSet> output = cm.call(input);
+//	    for(IntSet out : output) {
+//		System.out.println(out);
+//	    }
+	    EagerCliqueMiner cm2 = new EagerCliqueMiner(15, 9, 3, 4);
+	    Iterable<IntSet> output2 = cm2.call(input);
+	    for(IntSet out : output2) {
 		System.out.println(out);
 	    }
 	} catch (IOException e) {

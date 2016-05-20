@@ -52,17 +52,16 @@ public class CliqueMiner
 	}
 	System.out.printf("Edges for %d is %d\n", v1._1, count);
 	// time anchors to record running time
-	long start, end;
+	long t_start, t_end;
 	// use Apriori method for mining the cliques in bottom-up manner
 	// each edge represents a 2-frequent itemset
 	// building higher frequent itemset iteratively
 	HashMap<IntSet, IntSortedSet> timestamp_store = new HashMap<>();
-	// ArrayList<ArrayList<SparseBitSet>> candidate_set = new
-	// ArrayList<>();
 	ArrayList<IntSet> ground = new ArrayList<>();
 	ArrayList<IntSet> output = new ArrayList<>();
 	ArrayList<IntSet> candidate;
-	start = System.currentTimeMillis();
+	//initialization
+	t_start = System.currentTimeMillis();
 	for (Tuple2<Integer, IntSortedSet> edge : v1._2) {
 	    IntSet cluster = new IntOpenHashSet();
 	    cluster.add(edge._1);
@@ -70,12 +69,12 @@ public class CliqueMiner
 	    timestamp_store.put(cluster, edge._2);
 	    ground.add(cluster);
 	}
-	end = System.currentTimeMillis();
-	System.out.println("Initialization: " + (end - start) + " ms");
+	t_end = System.currentTimeMillis();
+	System.out.println("Initialization: " + (t_end - t_start) + " ms");
 	candidate = ground;
 	int level = 1;
 	while (true) {
-	    start = System.currentTimeMillis();
+	    t_start = System.currentTimeMillis();
 	    ArrayList<IntSet> nextLevel = new ArrayList<>();
 	    HashSet<IntSet> duplicates = new HashSet<>(); // do
 							  // not
@@ -96,8 +95,7 @@ public class CliqueMiner
 			continue;
 		    }
 		    IntSet newc = new IntOpenHashSet();
-		    newc.addAll(grd);
-		    newc.addAll(cand);
+		    newc.addAll(grd); newc.addAll(cand);
 		    // find intersections
 		    IntSortedSet timestamps = new IntRBTreeSet();
 		    timestamps.addAll(timestamp_store.get(grd));
@@ -120,7 +118,8 @@ public class CliqueMiner
 		}
 		if (!pruned) {
 		    IntSortedSet time_stamps = timestamp_store.get(cand);
-		    if (simplifier.call(time_stamps).size() >= K) {
+		    time_stamps = simplifier.call(time_stamps);
+		    if (time_stamps.size() >= K) {
 			// time_stamp is greater than K
 			if (cand.size() >= M) {
 			    output.add(cand);
@@ -128,9 +127,9 @@ public class CliqueMiner
 		    }
 		}
 	    }
-	    end = System.currentTimeMillis();
+	    t_end = System.currentTimeMillis();
 	    System.out.println("[" + v1._1 + "] Object-Grow: " + level + ", "
-		    + (end - start) + " ms");
+		    + (t_end - t_start) + " ms  cand_size:" + candidate.size());
 	    level++;
 	    if (nextLevel.isEmpty()) {
 		break;

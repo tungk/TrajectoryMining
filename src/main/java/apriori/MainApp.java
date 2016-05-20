@@ -30,9 +30,9 @@ public class MainApp {
 	//load with default values, and pass-in values from here
 	//the conf.constants should not be used at now
 	int K = 40, L = 10, M = 10, G = 3;
-	int hdfs_partitions = 195;
+	int hdfs_partitions = 48;
 	int eps = 15, minpt = 10 ;
-	int clique_miner_partitions = 1170;
+	int clique_miner_partitions = 24;
 	int snapshot_partitions = hdfs_partitions;
 	
 	if(args.length > 0) {
@@ -61,18 +61,20 @@ public class MainApp {
 	} else {
 	    System.out.println("No commandline arguments found. Using default values instead");
 	    System.out.println("Usage: .bin/spark-submit --class apriori.MainApp ~/TrajectoryMining/TrajectoryMining-0.0.1-SNAPSHOT-jar-with-dependencies.jar " +
-	    		"k=40 l=10 g=3 h=195 e=15 p=10 c=1170 s=195");
+	    		"k=40 l=10 g=3 h=195 e=15 p=10 c=115 s=115");
 	    System.out.println("Missing values are replaced by defaults!");
 	    System.exit(-1);
 	}
 	
 	String hdfs_input = AppProperties.getProperty("hdfs_input");
 	String name = AppProperties.getProperty("appName");
-	name = name + "Apriori-K" + K + "-L" + L + "-M" + M + "-G" + G + "-Par"
-		+ hdfs_partitions + "MinP" + Constants.MINPTS + "EPS"
-		+ Constants.EPS;
+	name = name + "Apriori-K" + K + "-L" + L + "-M" + M + "-G" + G + "-P"
+		+ hdfs_partitions + "-MP" + minpt + "-E"
+		+ eps;
 	Logger.getLogger("org").setLevel(Level.OFF);
 	Logger.getLogger("aka").setLevel(Level.OFF);
+	
+	
 	SparkConf conf = new SparkConf().setAppName(name);
 	JavaSparkContext context = new JavaSparkContext(conf);
 	JavaRDD<String> input = context.textFile(hdfs_input,
@@ -81,7 +83,8 @@ public class MainApp {
 	JavaRDD<SnapshotClusters> CLUSTERS = cm.doClustering(input, eps, minpt, M, snapshot_partitions);
 	
 	//start from CLUSTERS, go into apriori
-	AprioriLayout al = new AprioriLayout(K, M, L, G, clique_miner_partitions);
+//	AlgoLayout al = new AprioriLayout(K, M, L, G, clique_miner_partitions);
+	AlgoLayout al = new AprioriWithLB(K, M, L, G, clique_miner_partitions);
 	al.setInput(CLUSTERS);
 	//starting apriori
 	JavaRDD<IntSet> output = al.runLogic().filter(
