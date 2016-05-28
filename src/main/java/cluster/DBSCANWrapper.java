@@ -24,6 +24,7 @@ public class DBSCANWrapper implements Function<Tuple2<Integer, SnapShot>,  Snaps
     @Override
     public SnapshotClusters call(Tuple2<Integer, SnapShot> v1)
 	    throws Exception {
+	long time_start = System.currentTimeMillis();
 	    DBSCANClustering dbc = new DBSCANClustering(eps, minPts, v1._2);
 	    ArrayList<SimpleCluster> clusters = dbc.cluster();
 	    SnapshotClusters result = new SnapshotClusters(v1._1); 
@@ -35,6 +36,10 @@ public class DBSCANWrapper implements Function<Tuple2<Integer, SnapShot>,  Snaps
 			result.addCluster(sc);
 		}
 	    }
+	long time_end = System.currentTimeMillis();
+	  //remove when actual deploy
+		System.out.println("Objects to be clustered: " + v1._2.getObjects().size() + "  " + 
+	  (time_end - time_start)+ " ms");
 	    return result;
     }
 }

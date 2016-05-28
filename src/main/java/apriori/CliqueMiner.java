@@ -46,9 +46,10 @@ public class CliqueMiner
 	int count = 0;
 	while (tmp.hasNext()) {
 	    count++;
-	    Tuple2<Integer, IntSortedSet> tuple = tmp.next();
+	    tmp.next();
+	    // Tuple2<Integer, IntSortedSet> tuple = tmp.next();
 	    // print out input for debugging purpose
-	    System.out.println(tuple._1 + "\t" + tuple._2);
+	    // System.out.println(tuple._1 + "\t" + tuple._2);
 	}
 	System.out.printf("Edges for %d is %d\n", v1._1, count);
 	// time anchors to record running time
@@ -60,7 +61,7 @@ public class CliqueMiner
 	ArrayList<IntSet> ground = new ArrayList<>();
 	ArrayList<IntSet> output = new ArrayList<>();
 	ArrayList<IntSet> candidate;
-	//initialization
+	// initialization
 	t_start = System.currentTimeMillis();
 	for (Tuple2<Integer, IntSortedSet> edge : v1._2) {
 	    IntSet cluster = new IntOpenHashSet();
@@ -90,12 +91,13 @@ public class CliqueMiner
 		boolean pruned = false;
 		for (int j = 0; j < ground.size(); j++) {
 		    IntSet grd = ground.get(j);
-		    if(cand.containsAll(grd)) {
-			//a candidate should not join with its subset;
+		    if (cand.containsAll(grd)) {
+			// a candidate should not join with its subset;
 			continue;
 		    }
 		    IntSet newc = new IntOpenHashSet();
-		    newc.addAll(grd); newc.addAll(cand);
+		    newc.addAll(grd);
+		    newc.addAll(cand);
 		    // find intersections
 		    IntSortedSet timestamps = new IntRBTreeSet();
 		    timestamps.addAll(timestamp_store.get(grd));
@@ -135,6 +137,46 @@ public class CliqueMiner
 		break;
 	    } else {
 		candidate = nextLevel;
+		// forward closure testing
+		if (candidate.size() != 0) {
+		    IntSet eagerset = new IntOpenHashSet();
+		    IntSortedSet eagerstamps = new IntRBTreeSet();
+		    eagerset.addAll(candidate.get(0));
+		    eagerstamps.addAll(timestamp_store.get(candidate.get(0)));
+		    boolean early_flag = false;
+		    for (int i = 1; i < candidate.size(); i++) {
+			IntSet cand = candidate.get(i);
+			eagerset.addAll(candidate.get(i));
+			eagerstamps.retainAll(timestamp_store.get(cand));
+			if (eagerstamps.size() < K) {
+			    early_flag = true; // early terminates the join if
+					       // timestmaps already reduces
+					       // less than K
+			    break;
+			}
+		    }
+		    if (!early_flag) {
+			if (eagerset.size() < M) { // no patterns with size M
+						   // can be found
+			    System.out
+				    .println("Closure check directly terminates.");
+			    break;
+			}
+			eagerstamps = simplifier.call(eagerstamps);
+			if (eagerstamps.size() >= K) {
+			    if (eagerset.size() >= M) {
+				candidate.clear();
+				candidate.add(eagerset);
+				timestamp_store.put(eagerset, eagerstamps);
+				System.out
+					.printf("Closure check finished from level %d to %d\n",
+						level - 1, eagerset.size() - 2);
+				level = eagerset.size() - 2;
+				break;
+			    }
+			}
+		    }
+		}
 	    }
 	}
 	System.out.println("Finished");

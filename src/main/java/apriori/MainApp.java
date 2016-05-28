@@ -15,7 +15,6 @@ import org.apache.spark.api.java.function.Function;
 import cluster.BasicClustering;
 import cluster.ClusteringMethod;
 import conf.AppProperties;
-import conf.Constants;
 
 /**
  * the entry point of apriori method.
@@ -32,8 +31,8 @@ public class MainApp {
 	int K = 40, L = 10, M = 10, G = 3;
 	int hdfs_partitions = 48;
 	int eps = 15, minpt = 10 ;
-	int clique_miner_partitions = 24;
-	int snapshot_partitions = hdfs_partitions;
+	int clique_miner_partitions = 174;
+	int snapshot_partitions = 48;
 	
 	if(args.length > 0) {
 	    for(String arg : args) {
@@ -56,7 +55,7 @@ public class MainApp {
 		    clique_miner_partitions = Integer.parseInt(arg.split("=")[1]);
 		} else if(arg.startsWith("s=")|| arg.startsWith("S=")) {
 		    snapshot_partitions = Integer.parseInt(arg.split("=")[1]);
-		}
+		} 
 	    }
 	} else {
 	    System.out.println("No commandline arguments found. Using default values instead");
@@ -77,16 +76,20 @@ public class MainApp {
 	
 	SparkConf conf = new SparkConf().setAppName(name);
 	JavaSparkContext context = new JavaSparkContext(conf);
-	JavaRDD<String> input = context.textFile(hdfs_input,
-		hdfs_partitions);
-	ClusteringMethod cm = new BasicClustering();
-	JavaRDD<SnapshotClusters> CLUSTERS = cm.doClustering(input, eps, minpt, M, snapshot_partitions);
+//	JavaRDD<String> input = context.textFile(hdfs_input,
+//		hdfs_partitions);
+//	ClusteringMethod cm = new BasicClustering();
+//	JavaRDD<SnapshotClusters> CLUSTERS = cm.doClustering(input, eps, minpt, M, snapshot_partitions);
+//	CLUSTERS.saveAsObjectFile("hdfs://dianwei.ddns.comp.nus.edu.sg:9200/usr/fanqi/input/clusters");
+//	CLUSTERS.cache();
+//	//start from CLUSTERS, go into apriori
 	
-	//start from CLUSTERS, go into apriori
-//	AlgoLayout al = new AprioriLayout(K, M, L, G, clique_miner_partitions);
-	AlgoLayout al = new AprioriWithLB(K, M, L, G, clique_miner_partitions);
+	JavaRDD<SnapshotClusters> CLUSTERS = context.objectFile("hdfs://dianwei.ddns.comp.nus.edu.sg:9200/usr/fanqi/input/clusters", 174);
+	
+	AlgoLayout al = new AprioriLayout(K, M, L, G, clique_miner_partitions);
+//	AlgoLayout al = new AprioriWithLB(K, M, L, G, clique_miner_partitions);
 	al.setInput(CLUSTERS);
-	//starting apriori
+//	//starting apriori
 	JavaRDD<IntSet> output = al.runLogic().filter(
 		new Function<IntSet,Boolean>(){
 		    private static final long serialVersionUID = 1854327010963412841L;
@@ -97,7 +100,6 @@ public class MainApp {
 		}); // we do not need distinct here, since the star-based partition guranteed distinctness
 	//need further removal of duplicates
 	//if a pattern (1,2,3,4) is found, it may like found (2,3,4) from other machine
-	
 	List<IntSet> grounds = output.collect();
 //	System.out.println("Before DR");
 //	for(IntSet each_output : grounds) {

@@ -77,7 +77,7 @@ public class AprioriWithLB implements AlgoLayout {
 	// this point diverses from AprioriLayout
 
 	Map<Tuple2<Integer, Integer>, IntSortedSet> exact = stage3.collectAsMap();
-	
+	long time_start = System.currentTimeMillis();
 	HashMap<Integer, Integer> stats = new HashMap<>();
 	for (Tuple2<Integer, Integer> key : exact.keySet()) {
 	    if (!stats.containsKey(key._1)) {
@@ -99,10 +99,6 @@ public class AprioriWithLB implements AlgoLayout {
 	int[] bucket_weights = new int[clique_partitions];
 	HashMap<Integer, Integer> id_bucket_mapping = new HashMap<>();
 	for (Entry<Integer,Integer> entry : list) {
-//	    int offset = pointer % clique_partitions;
-//	    bucket_weights[offset] += stats.get(key);
-//	    id_bucket_mapping.put(key, offset);
-//	    pointer++; this screws the partition
 	    int min = bucket_weights[0];
 	    pointer = 0;
 	    for(int i = 1; i < bucket_weights.length; i++) {
@@ -114,6 +110,8 @@ public class AprioriWithLB implements AlgoLayout {
 	    id_bucket_mapping.put(entry.getKey(), pointer);
 	    bucket_weights[pointer] += entry.getValue();
 	}
+	long time_end = System.currentTimeMillis();
+	System.out.println("[LOAD SCHEDULE]: " + (time_end - time_start) + " ms");
 
 	JavaPairRDD<Integer, Iterable<Tuple2<Integer, IntSortedSet>>> stage4 = stage3
 		.mapToPair(edge_mapper)

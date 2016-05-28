@@ -26,8 +26,8 @@ public class AprioriLayout implements AlgoLayout {
     private EdgeReducer edge_reducer;
     private EdgeFilter edge_filter;
     private EdgeMapper edge_mapper;
-//    private CliqueMiner clique_miner;
-    private EagerCliqueMiner clique_miner;
+    private CliqueMiner clique_miner;
+//    private EagerCliqueMiner clique_miner;
     private EdgeLSimplification edge_simplifier;
     
     
@@ -40,8 +40,8 @@ public class AprioriLayout implements AlgoLayout {
 	edge_reducer = new EdgeReducer();
 	edge_filter = new EdgeFilter(K,M,L,G);
 	edge_mapper = new EdgeMapper();
-//	clique_miner = new CliqueMiner(K,M,L,G);
-	clique_miner = new EagerCliqueMiner(K,M,L,G); 
+	clique_miner = new CliqueMiner(K,M,L,G);
+//	clique_miner = new EagerCliqueMiner(K,M,L,G); 
 	edge_simplifier = new EdgeLSimplification(K, L, G);
 	clique_partitions = 195; //32 executors
     }
@@ -55,8 +55,8 @@ public class AprioriLayout implements AlgoLayout {
  	edge_reducer = new EdgeReducer();
  	edge_filter = new EdgeFilter(K,M,L,G);
  	edge_mapper = new EdgeMapper();
-// 	clique_miner = new CliqueMiner(K,M,L,G);
- 	clique_miner = new EagerCliqueMiner(K,M,L,G); 
+ 	clique_miner = new CliqueMiner(K,M,L,G);
+// 	clique_miner = new EagerCliqueMiner(K,M,L,G); 
  	edge_simplifier = new EdgeLSimplification(K, L, G);
  	clique_partitions = pars;
      }
@@ -75,9 +75,9 @@ public class AprioriLayout implements AlgoLayout {
 	System.out.println("Total edges from all snapshots:\t" + stage1.count());
 	
 	//Remove edges which are not candidate sequences
-	JavaPairRDD<Tuple2<Integer, Integer>, IntSortedSet> stage2 = stage1.reduceByKey(edge_reducer)
-		.cache();
-	System.out.println("Condensed edges in connection graph:\t"+stage2.count());
+	JavaPairRDD<Tuple2<Integer, Integer>, IntSortedSet> stage2 = stage1.reduceByKey(edge_reducer);
+//		.cache();
+//	System.out.println("Condensed edges in connection graph:\t"+stage2.count());
 	
 	JavaPairRDD<Tuple2<Integer, Integer>, IntSortedSet> stage3 = stage2
 		.mapValues(edge_simplifier)
@@ -88,24 +88,22 @@ public class AprioriLayout implements AlgoLayout {
 	//Create stars for each leading vertex
 	JavaPairRDD<Integer, Iterable<Tuple2<Integer, IntSortedSet>>> stage4 
 		= stage3.mapToPair(edge_mapper)
-		.groupByKey(clique_partitions)
-		.cache(); 
-	Map<Integer, Iterable<Tuple2<Integer, IntSortedSet>>> stage4result = stage4.collectAsMap();
-	System.out.println("Star size distribution:");
-	for(Map.Entry<Integer, Iterable<Tuple2<Integer, IntSortedSet>>> entry : stage4result.entrySet()) {
-	    Iterator<Tuple2<Integer,IntSortedSet>> itr = entry.getValue().iterator();
-	    int count = 0;
-	    while(itr.hasNext()) {
-		count++;
-		itr.next();
-	    }
-	    System.out.println(entry.getKey() + "\t" + count);
-	}
-	
+		.groupByKey(clique_partitions);
+//		.cache(); 
+//	Map<Integer, Iterable<Tuple2<Integer, IntSortedSet>>> stage4result = stage4.collectAsMap();
+//	System.out.println("Star size distribution:");
+//	for(Map.Entry<Integer, Iterable<Tuple2<Integer, IntSortedSet>>> entry : stage4result.entrySet()) {
+//	    Iterator<Tuple2<Integer,IntSortedSet>> itr = entry.getValue().iterator();
+//	    int count = 0;
+//	    while(itr.hasNext()) {
+//		count++;
+//		itr.next();
+//	    }
+//	    System.out.println(entry.getKey() + "\t" + count);
+//	}
 	//Apriori mining for each star
 	JavaRDD<IntSet> stage5 = 
-		stage4.flatMap(clique_miner)
-		.cache();
+		stage4.flatMap(clique_miner).cache();
 	return stage5;
     }
 

@@ -13,8 +13,6 @@ import java.util.Set;
  * A cluster needs to have a time ID, though it may be redundant
  * as multiple clusters belonging to the same snapshots containing the same ID.
  * 
- * TODO:: May use BitSet or FastUtil set to further boost the performance
- * 
  * @author a0048267
  *
  */
@@ -27,7 +25,6 @@ public class SimpleCluster implements Serializable{
   
     public SimpleCluster() {
 //	oids = new HashSet<Integer>();
-//	oids = IntSet.;
 	oids = new IntOpenHashSet();
     }
     

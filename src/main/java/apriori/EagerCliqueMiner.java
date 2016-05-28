@@ -44,9 +44,10 @@ public class EagerCliqueMiner
 	int count = 0;
 	while (tmp.hasNext()) {
 	    count++;
-	    Tuple2<Integer, IntSortedSet> tuple = tmp.next();
+	    tmp.next();
+//	    Tuple2<Integer, IntSortedSet> tuple = tmp.next();
 	    // print out input for debugging purpose
-	    System.out.println(tuple._1 + "\t" + tuple._2);
+//	    System.out.println(tuple._1 + "\t" + tuple._2);
 	}
 	System.out.printf("Edges for %d is %d\n", self, count);
 	

@@ -61,4 +61,13 @@ public class SnapShot implements Serializable {
     public Point getPoint(int obj) {
 	return object_positions.get(obj);
     }
+    
+    @Override
+    public SnapShot clone() {
+	SnapShot nss = new SnapShot(timestamp);
+	for(int key : object_positions.keySet()) {
+	    nss.addObject(key, object_positions.get(key));
+	}
+	return nss;
+    }
 }

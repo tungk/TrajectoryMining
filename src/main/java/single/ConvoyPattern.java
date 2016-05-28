@@ -19,7 +19,6 @@ import model.SnapshotClusters;
  * @author a0048267
  */
 public class ConvoyPattern implements PatternMiner {
-
     int e,p, m,k;
     ArrayList<SnapShot> input;
     public ConvoyPattern() {
@@ -129,9 +128,12 @@ public class ConvoyPattern implements PatternMiner {
     }
 
     @Override
-    public void loadData(ArrayList<SnapShot> snapshots) {
+    public void loadData(final ArrayList<SnapShot> snapshots) {
+	input = new ArrayList<>();
+	for(SnapShot ss : snapshots) {
+	    input.add(ss.clone());
+	}
 	input = snapshots;
-	System.out.println("[CONVOY]-Input (Temporal) Size: " + input.size());
     }
 
     @Override

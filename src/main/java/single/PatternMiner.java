@@ -14,7 +14,7 @@ public interface PatternMiner {
 
     public void loadParameters(int ... data);
 
-    public void loadData(ArrayList<SnapShot> snapshots);
+    public void loadData(final ArrayList<SnapShot> snapshots);
 
     public void printStats();
 }	

@@ -1,12 +1,9 @@
 package single;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.TreeMap;
 
 import model.SnapShot;
@@ -30,25 +27,112 @@ public class MainApp {
 	    int m = Integer.parseInt(args[2]);
 	    int k = Integer.parseInt(args[3]);
 	    int l = Integer.parseInt(args[4]);
-	    int n = Integer.parseInt(args[5]);
-	    int pattern_class = Integer.parseInt(args[6]);
+	    int O = Integer.parseInt(args[5]);
+	    int T = Integer.parseInt(args[6]);
+//	    int pattern_class = Integer.parseInt(args[7]);
 	    String file_name = args[7];
-	    PatternMiner pm = (PatternMiner) classes[pattern_class]
-		    .newInstance();
-
-	    pm.loadParameters(e, p, m, k, l);
+	  
+	    long time_start;
+	    long time_end;
+	    time_start = System.currentTimeMillis();
 	    ArrayList<Trajectory> trajs = loadData(file_name);
-	    ArrayList<SnapShot> snapshots = transformSnap(trajs, n);
+	    time_end = System.currentTimeMillis();
+	    System.out.println("Data Reading: " + (time_end-time_start) + " ms");
+	    time_start = System.currentTimeMillis();
+	    ArrayList<SnapShot> snapshots;
+//	    if (n == 0) {
+//		// o is used for restricting number of objects
+//		snapshots = transformSnapKeepO(trajs, o);
+//	    } else {
+//		// o is used for restricting number of snapshots
+//		snapshots = transformSnapKeepT(trajs, o);
+//	    }
+	    snapshots = transformSnapKeepOT(trajs, O, T);
+	    
+	    
+	    time_end = System.currentTimeMillis();
+	    System.out.println("Data Transformation: "
+		    + (time_end - time_start) + " ms");
 	    // snapshots are then feed to each pattern miner;
-	    pm.loadData(snapshots);
-	    pm.patternGen();
-	    pm.printStats();
+	    int[] class_masks = new int[]{0,1,2,4};
+	    for(int i : class_masks) {
+		  PatternMiner pm = (PatternMiner) classes[i]
+			    .newInstance();
+		    pm.loadParameters(e, p, m, k, l);
+		    pm.loadData(snapshots);
+		    pm.patternGen();
+	    }
 	}
     }
-
-    private static ArrayList<SnapShot> transformSnap(
-	    ArrayList<Trajectory> trajs, int maximum) {
+    
+    private static ArrayList<SnapShot> transformSnapKeepOT( ArrayList<Trajectory> trajs, int max_o, int max_t) {
 	TreeMap<Integer, SnapShot> ts_shot_map = new TreeMap<>();
+	int o_count = 0, t_count = 0;  
+	for (int i = 0; i < max_o && i < trajs.size(); i++) {
+	    Trajectory traj = trajs.get(i);
+	    int oid = traj.getID();
+	    for (TemporalPoint tp : traj) {
+		int t = tp.getTime();
+		if (!ts_shot_map.containsKey(t)) {
+		    ts_shot_map.put(t, new SnapShot(t));
+		}
+		ts_shot_map.get(t).addObject(oid, tp);
+	    }
+	    o_count++;
+	}
+	ArrayList<SnapShot> result = new ArrayList<>();
+	for(int j = 0; j < max_t && !ts_shot_map.isEmpty(); j++) {
+	    int key = ts_shot_map.firstKey();
+	    result.add(ts_shot_map.get(key));
+	    ts_shot_map.remove(key);
+	    t_count++;
+	}
+	System.out.printf("Input data size %d objects, %d snapshots \n",
+		o_count, t_count);
+	return result;
+    }
+    
+
+    public static ArrayList<SnapShot> transformSnapKeepO(
+	    ArrayList<Trajectory> trajs, int max_o) {
+	TreeMap<Integer, SnapShot> ts_shot_map = new TreeMap<>();
+	int o_count = 0, t_count = 0; 
+	for (int i = 0; i < max_o; i++) {
+	    Trajectory traj = trajs.get(i);
+	    int oid = traj.getID();
+	    for (TemporalPoint tp : traj) {
+		int t = tp.getTime();
+		if (!ts_shot_map.containsKey(t)) {
+		    ts_shot_map.put(t, new SnapShot(t));
+		}
+		ts_shot_map.get(t).addObject(oid, tp);
+	    }
+	    o_count++;
+	}
+	ArrayList<SnapShot> result = new ArrayList<>();
+	while (!ts_shot_map.isEmpty()) {
+	    int key = ts_shot_map.firstKey();
+	    result.add(ts_shot_map.get(key));
+	    ts_shot_map.remove(key);
+	    t_count++;
+	}
+	System.out.printf("Input data size %d objects, %d snapshots \n",
+		o_count, t_count);
+	return result;
+    }
+
+    /**
+     * Only keeps max_t temporals and max_o objects
+     * 
+     * @param trajs
+     * @param max_t
+     * @param max_o
+     * @return
+     */
+    public static ArrayList<SnapShot> transformSnapKeepT(
+	    ArrayList<Trajectory> trajs, int max_t) {
+	TreeMap<Integer, SnapShot> ts_shot_map = new TreeMap<>();
+	int o_count = 0, t_count = 0;
 	for (Trajectory traj : trajs) {
 	    int oid = traj.getID();
 	    for (TemporalPoint tp : traj) {
@@ -58,21 +142,17 @@ public class MainApp {
 		}
 		ts_shot_map.get(t).addObject(oid, tp);
 	    }
+	    o_count++;
 	}
 	ArrayList<SnapShot> result = new ArrayList<>();
-	if (maximum == -1) {
-	    while (!ts_shot_map.isEmpty()) {
-		int key = ts_shot_map.firstKey();
-		result.add(ts_shot_map.get(key));
-		ts_shot_map.remove(key);
-	    }
-	} else {
-	    for (int i = 0; i < maximum; i++) {
-		int key = ts_shot_map.firstKey();
-		result.add(ts_shot_map.get(key));
-		ts_shot_map.remove(key);
-	    }
+	for (int i = 0; i < max_t; i++) {
+	    int key = ts_shot_map.firstKey();
+	    result.add(ts_shot_map.get(key));
+	    ts_shot_map.remove(key);
+	    t_count++;
 	}
+	System.out.printf("Input data size %d objects, %d snapshots \n",
+		o_count, t_count);
 	return result;
     }
 
@@ -107,6 +187,6 @@ public class MainApp {
 
     private static void printHelper() {
 	System.out
-		.println("[Usage]: java -cp TrajectoryMining-0.0.1-SNAPSHOT-jar-with-depedencies.jar single.MainApp E P M K L ClassIndicator Input");
+		.println("[Usage]: java -cp TrajectoryMining-0.0.1-SNAPSHOT-jar-with-depedencies.jar single.MainApp E P M K L MAX_O MAX_T Input");
     }
 }

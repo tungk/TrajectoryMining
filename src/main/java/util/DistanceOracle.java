@@ -13,6 +13,9 @@ public class DistanceOracle {
      * @return distance in meters
      */
     public static double compEarthDistance(Point p1, Point p2) {
+	if(p1 == null || p2 == null) {
+	    return Double.MAX_VALUE;
+	}
 	double lat1 = p1.getLat();
 	double lat2 = p2.getLat();
 	double lont1 = p1.getLont();
