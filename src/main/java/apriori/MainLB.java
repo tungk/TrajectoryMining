@@ -22,7 +22,7 @@ import conf.AppProperties;
  * @author a0048267
  *
  */
-public class MainApp {
+public class MainLB {
     public static void main(String[] args) {
 	//load with default values, and pass-in values from here
 	//the conf.constants should not be used at now
@@ -62,7 +62,7 @@ public class MainApp {
 	//Load input data directly from HDFS
 	JavaRDD<SnapshotClusters> CLUSTERS = context.objectFile(hdfs_input, clique_miner_partitions);
 	
-	AlgoLayout al = new AprioriLayout(K, M, L, G, clique_miner_partitions);
+	AlgoLayout al = new AprioriWithLB(K, M, L, G, clique_miner_partitions);
 //	AlgoLayout al = new AprioriWithLB(K, M, L, G, clique_miner_partitions);
 	al.setInput(CLUSTERS);
 //	//starting apriori

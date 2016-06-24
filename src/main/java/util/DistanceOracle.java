@@ -17,12 +17,28 @@ public class DistanceOracle {
 	    return Double.MAX_VALUE;
 	}
 	double lat1 = p1.getLat();
+	double phi1 = Math.toRadians(lat1);
 	double lat2 = p2.getLat();
+	double phi2 = Math.toRadians(lat2);
+	double delta_phi = Math.toRadians(lat2-lat1);
 	double lont1 = p1.getLont();
 	double lont2 = p2.getLont();
-	// convert to meter
-	double latDistance = Math.toRadians(lat2-lat1) * EARTH_RADIUS; //unit km
-	double lonDistance = Math.toRadians(lont2-lont1) * EARTH_RADIUS; //unit km
-	return Math.sqrt(Math.pow(latDistance, 2) + Math.pow(lonDistance, 2)) * 1000; //unit m 
+	double delta_lambda = Math.toRadians(lont2-lont1);
+	
+	double a = Math.pow(Math.sin(delta_phi)/2,2) +
+		   Math.cos(phi1)*Math.cos(phi2)* Math.pow(Math.sin(delta_lambda/2),2);
+	double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+	return c * EARTH_RADIUS * 1000;
+    }
+    
+    public static double compEuclidianDistance(Point p1, Point p2) {
+	if(p1 == null || p2 == null) {
+	    return Double.MAX_VALUE;
+	}
+	double x1 = p1.getLat(), y1 = p1.getLont();
+	double x2 = p2.getLat(), y2 = p2.getLont();
+	double xdiff = x2-x1;
+	double ydiff = y2-y1;
+	return Math.sqrt(xdiff*xdiff + ydiff*ydiff) * 10; //to meters;
     }
 }

@@ -42,14 +42,13 @@ public class CliqueMiner
 	    Tuple2<Integer, Iterable<Tuple2<Integer, IntSortedSet>>> v1)
 	    throws Exception {
 	Iterator<Tuple2<Integer, IntSortedSet>> tmp = v1._2.iterator();
-	System.out.println(v1._1);
 	int count = 0;
 	while (tmp.hasNext()) {
 	    count++;
 	    tmp.next();
-	    // Tuple2<Integer, IntSortedSet> tuple = tmp.next();
-	    // print out input for debugging purpose
-	    // System.out.println(tuple._1 + "\t" + tuple._2);
+//	     Tuple2<Integer, IntSortedSet> tuple = tmp.next();
+////	     print out input for debugging purpose
+//	     System.out.println(tuple._1 + "\t" + tuple._2);
 	}
 	System.out.printf("Edges for %d is %d\n", v1._1, count);
 	// time anchors to record running time
@@ -62,7 +61,6 @@ public class CliqueMiner
 	ArrayList<IntSet> output = new ArrayList<>();
 	ArrayList<IntSet> candidate;
 	// initialization
-	t_start = System.currentTimeMillis();
 	for (Tuple2<Integer, IntSortedSet> edge : v1._2) {
 	    IntSet cluster = new IntOpenHashSet();
 	    cluster.add(edge._1);
@@ -70,10 +68,9 @@ public class CliqueMiner
 	    timestamp_store.put(cluster, edge._2);
 	    ground.add(cluster);
 	}
-	t_end = System.currentTimeMillis();
-	System.out.println("Initialization: " + (t_end - t_start) + " ms");
 	candidate = ground;
 	int level = 1;
+	
 	while (true) {
 	    t_start = System.currentTimeMillis();
 	    ArrayList<IntSet> nextLevel = new ArrayList<>();
@@ -130,8 +127,16 @@ public class CliqueMiner
 		}
 	    }
 	    t_end = System.currentTimeMillis();
+	    long time_taken = t_end-t_start;
 	    System.out.println("[" + v1._1 + "] Object-Grow: " + level + ", "
-		    + (t_end - t_start) + " ms  cand_size:" + candidate.size());
+		    + time_taken + " ms  cand_size:" + candidate.size());
+	    if(time_taken > 20000) {
+		break;
+	    } else if (time_taken > 12000) {
+		if(candidate.size() > 1200) {
+		    break;
+		}
+	    }
 	    level++;
 	    if (nextLevel.isEmpty()) {
 		break;
@@ -159,7 +164,7 @@ public class CliqueMiner
 			if (eagerset.size() < M) { // no patterns with size M
 						   // can be found
 			    System.out
-				    .println("Closure check directly terminates.");
+				    .println("[" + v1._1 + "] Closure check directly terminates.");
 			    break;
 			}
 			eagerstamps = simplifier.call(eagerstamps);
@@ -169,7 +174,7 @@ public class CliqueMiner
 				candidate.add(eagerset);
 				timestamp_store.put(eagerset, eagerstamps);
 				System.out
-					.printf("Closure check finished from level %d to %d\n",
+					.printf("[" + v1._1 + "] Closure check finished from level %d to %d\n",
 						level - 1, eagerset.size() - 2);
 				level = eagerset.size() - 2;
 				break;
@@ -179,7 +184,7 @@ public class CliqueMiner
 		}
 	    }
 	}
-	System.out.println("Finished");
+	System.out.println("[" + v1._1 + "]Finished");
 	return output;
     }
 

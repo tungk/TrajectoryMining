@@ -3,16 +3,10 @@ package apriori;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSortedSet;
 
-import java.util.Map;
-
 import model.SnapshotClusters;
-
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
-
 import scala.Tuple2;
-import java.util.Iterator;
-
 
 public class AprioriLayout implements AlgoLayout {
     private static final long serialVersionUID = 1013697935052286484L;

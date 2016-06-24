@@ -34,6 +34,7 @@ public class DBSCANClustering {
     private ArrayList<SimpleCluster> clusters;
     private double eps;
     private double minPts;
+    private int r;
 
     /**
      * Creates a new instance of a DBSCANClusterer.
@@ -55,6 +56,15 @@ public class DBSCANClustering {
         this.minPts = minPts;
         this.sp = sp;
         clusters = cluster();
+        r = 1;
+    }
+    
+    public DBSCANClustering(double eps, int minPts, SnapShot sp, int r) {
+        this.eps = eps;
+        this.minPts = minPts;
+        this.sp = sp;
+        clusters = cluster();
+        this.r =r;
     }
 //    
     public ArrayList<SimpleCluster> getCluster() {
@@ -159,7 +169,11 @@ public class DBSCANClustering {
     private double dist(int neighbor, int point) {
 	Point p1 = sp.getPoint(neighbor);
 	Point p2 = sp.getPoint(point);
-	return DistanceOracle.compEarthDistance(p1, p2);
+	if(r == 1) {
+	    return DistanceOracle.compEarthDistance(p1, p2);
+	} else {
+	    return DistanceOracle.compEuclidianDistance(p1, p2);
+	}
     }
 
     /**

@@ -33,8 +33,8 @@ public class AprioriWithLB implements AlgoLayout {
     private EdgeReducer edge_reducer;
     private EdgeFilter edge_filter;
     private EdgeMapper edge_mapper;
-    // private CliqueMiner clique_miner;
-    private EagerCliqueMiner clique_miner;
+    private CliqueMiner clique_miner;
+//    private EagerCliqueMiner clique_miner;
     private EdgeLSimplification edge_simplifier;
 
     public AprioriWithLB(int k, int m, int l, int g, int pars) {
@@ -46,8 +46,8 @@ public class AprioriWithLB implements AlgoLayout {
 	edge_reducer = new EdgeReducer();
 	edge_filter = new EdgeFilter(K, M, L, G);
 	edge_mapper = new EdgeMapper();
-	// clique_miner = new CliqueMiner(K,M,L,G);
-	clique_miner = new EagerCliqueMiner(K, M, L, G);
+	 clique_miner = new CliqueMiner(K,M,L,G);
+//	clique_miner = new EagerCliqueMiner(K, M, L, G);
 	edge_simplifier = new EdgeLSimplification(K, L, G);
 	clique_partitions = pars;
     }
@@ -117,20 +117,20 @@ public class AprioriWithLB implements AlgoLayout {
 		.mapToPair(edge_mapper)
 		.groupByKey(new TempPartitioner(clique_partitions, id_bucket_mapping))
 		.cache();
-	Map<Integer, Iterable<Tuple2<Integer, IntSortedSet>>> stage4result = stage4
-		.collectAsMap();
-	System.out.println("Star size distribution:");
-	for (Map.Entry<Integer, Iterable<Tuple2<Integer, IntSortedSet>>> entry : stage4result
-		.entrySet()) {
-	    Iterator<Tuple2<Integer, IntSortedSet>> itr = entry.getValue()
-		    .iterator();
-	    int count = 0;
-	    while (itr.hasNext()) {
-		count++;
-		itr.next();
-	    }
-	    System.out.println(entry.getKey() + "\t" + count);
-	}
+//	Map<Integer, Iterable<Tuple2<Integer, IntSortedSet>>> stage4result = stage4
+//		.collectAsMap();
+//	System.out.println("Star size distribution:");
+//	for (Map.Entry<Integer, Iterable<Tuple2<Integer, IntSortedSet>>> entry : stage4result
+//		.entrySet()) {
+//	    Iterator<Tuple2<Integer, IntSortedSet>> itr = entry.getValue()
+//		    .iterator();
+//	    int count = 0;
+//	    while (itr.hasNext()) {
+//		count++;
+//		itr.next();
+//	    }
+//	    System.out.println(entry.getKey() + "\t" + count);
+//	}
 
 	// Apriori mining for each star
 	JavaRDD<IntSet> stage5 = stage4.flatMap(clique_miner).cache();

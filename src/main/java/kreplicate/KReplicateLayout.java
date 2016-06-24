@@ -19,11 +19,13 @@ public class KReplicateLayout implements Serializable {
     private JavaRDD<SnapshotClusters> Clusters;
     private int K, L, M, G;
 
+    private int eta;
     public KReplicateLayout(int k, int l, int m, int g) {
 	K = k;
 	L = l;
 	M = m;  
 	G = g;
+	eta =  ((int) (Math.ceil(k*1.0/l)) - 1 ) *g + K+L-1;
     }
 
     public void setInput(JavaRDD<SnapshotClusters> cLUSTERS) {
@@ -32,7 +34,7 @@ public class KReplicateLayout implements Serializable {
 
     public JavaPairRDD<Integer, ArrayList<IntSet>> runLogic() {
 	JavaPairRDD<Integer, ArrayList<IntSet>> result = Clusters
-		.flatMapToPair(new KReplicatePartitioner(2 * K + G))
+		.flatMapToPair(new KReplicatePartitioner(eta))
 		.groupByKey().mapValues(new LocalMiner(K, M, L, G));
 
 	return result;

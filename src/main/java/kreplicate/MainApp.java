@@ -37,34 +37,40 @@ import conf.Constants;
  */
 public class MainApp {
     public static void main(String[] args) {
-	int K = Integer.parseInt(AppProperties.getProperty("K"));
-	int L = Integer.parseInt(AppProperties.getProperty("L"));
-	int M = Integer.parseInt(AppProperties.getProperty("M"));
-	int G = Integer.parseInt(AppProperties.getProperty("G"));
+	int K = 40, L = 10, M = 10, G = 3;
+	int ls_partition = 486;
+	if(args.length > 0) {
+	    for(String arg : args) {
+		System.out.println(arg);
+		if(arg.startsWith("k=") || arg.startsWith("K=")) {
+		    K = Integer.parseInt(arg.split("=")[1]);
+		} else if(arg.startsWith("l=")|| arg.startsWith("L=")) {
+		    L = Integer.parseInt(arg.split("=")[1]);
+		} else if(arg.startsWith("m=")|| arg.startsWith("M=")) {
+		    M = Integer.parseInt(arg.split("=")[1]);
+		} else if(arg.startsWith("g=")|| arg.startsWith("G=")) {
+		    G = Integer.parseInt(arg.split("=")[1]);
+		} else if(arg.startsWith("c=")|| arg.startsWith("C=")) {
+		    ls_partition = Integer.parseInt(arg.split("=")[1]);
+		} 
+	    }
+	} else {
+	    System.out.println("No commandline arguments found. Using default values instead");
+	    System.out.println("Usage: .bin/spark-submit --class apriori.MainApp ~/TrajectoryMining/TrajectoryMining-0.0.1-SNAPSHOT-jar-with-dependencies.jar " +
+	    		"k=40 l=10 g=3 h=195 e=15 p=10 c=115");
+	    System.out.println("Missing values are replaced by defaults!");
+	    System.exit(-1);
+	}
 	String hdfs_input = AppProperties.getProperty("hdfs_input");
-	int hdfs_read_partitions = Integer.parseInt(AppProperties
-		.getProperty("hdfs_read_partitions"));
-
-	// if (!conf.contains("spark.app.name")) {
-	String name = AppProperties.getProperty("appName");
-	name = name + "-K" + K + "-L" + L + "-M" + M + "-G" + G + "-Par"
-		+ hdfs_read_partitions + "MinP" + Constants.MINPTS + "EPS"
-		+ Constants.EPS;
-	// }
+	String name = "Replicate-K" + K + "-L" + L + "-M" + M + "-G" + G + "-File"+hdfs_input
+		;
 	Logger.getLogger("org").setLevel(Level.OFF);
 	Logger.getLogger("aka").setLevel(Level.OFF);
 
 	SparkConf conf = new SparkConf().setAppName(name);
-
 	JavaSparkContext context = new JavaSparkContext(conf);
-	JavaRDD<String> input = context.textFile(hdfs_input,
-		hdfs_read_partitions);
-	ClusteringMethod cm = new BasicClustering();
-	JavaRDD<SnapshotClusters> CLUSTERS = cm.doClustering(input,
-		Integer.parseInt(AppProperties.getProperty("eps")),
-		Integer.parseInt(AppProperties.getProperty("minpts")),
-		M, 
-		Integer.parseInt(AppProperties.getProperty("snapshot_partitions")));
+	
+	JavaRDD<SnapshotClusters> CLUSTERS = context.objectFile(hdfs_input, ls_partition);
 	// --------------- the above code should be identical to different
 	// algorithms
 	KReplicateLayout KFL = new KReplicateLayout(K, L, M, G);
