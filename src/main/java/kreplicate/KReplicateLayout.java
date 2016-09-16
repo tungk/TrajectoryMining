@@ -25,7 +25,7 @@ public class KReplicateLayout implements Serializable {
 	L = l;
 	M = m;  
 	G = g;
-	eta =  ((int) (Math.ceil(k*1.0/l)) - 1 ) *g + K+L-1;
+	eta =  ((int) (Math.ceil(k*1.0/l)) - 1 ) *(g-1) + K+L-1;
     }
 
     public void setInput(JavaRDD<SnapshotClusters> cLUSTERS) {

@@ -28,7 +28,7 @@ import conf.Constants;
  * This package testifies a k-forward approach for trajectory mining
  * 
  * In this method, every local clusters copy its information to its previous
- * $2K$ neighbors. Then each cluster locally performs a CMC method to find the
+ * $\eta$ neighbors. Then each cluster locally performs a CMC method to find the
  * candidate clusters. The final candidate clusters are grouped to remove
  * duplicates, also the inclusion-exclusion relationships.
  * 
@@ -62,8 +62,7 @@ public class MainApp {
 	    System.exit(-1);
 	}
 	String hdfs_input = AppProperties.getProperty("hdfs_input");
-	String name = "Replicate-K" + K + "-L" + L + "-M" + M + "-G" + G + "-File"+hdfs_input
-		;
+	String name = "Replicate-K" + K + "-L" + L + "-M" + M + "-G" + G + "-File"+hdfs_input;
 	Logger.getLogger("org").setLevel(Level.OFF);
 	Logger.getLogger("aka").setLevel(Level.OFF);
 
