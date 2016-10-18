@@ -130,13 +130,13 @@ public class CliqueMiner
 	    long time_taken = t_end-t_start;
 	    System.out.println("[" + v1._1 + "] Object-Grow: " + level + ", "
 		    + time_taken + " ms  cand_size:" + candidate.size());
-	    if(time_taken > 20000) {
-		break;
-	    } else if (time_taken > 12000) {
-		if(candidate.size() > 1200) {
-		    break;
-		}
-	    }
+//	    if(time_taken > 20000) {
+//		break;
+//	    } else if (time_taken > 12000) {
+//		if(candidate.size() > 1200) {
+//		    break;
+//		}
+//	    }
 	    level++;
 	    if (nextLevel.isEmpty()) {
 		break;

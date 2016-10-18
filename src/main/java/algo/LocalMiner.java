@@ -5,8 +5,6 @@ package algo;
  * In Spark 2.0.0, please uncomment the following
 */
 
-/*
-
 import it.unimi.dsi.fastutil.ints.IntSet;
 
 import java.util.ArrayList;
@@ -322,4 +320,3 @@ public class LocalMiner implements
 		}
 	}
 }
-*/
