@@ -14,14 +14,12 @@ public class AprioriLayout implements AlgoLayout {
     private int K, L, M, G;
     private int clique_partitions;
     
-    //the following fields are used for runlogic(), we use private field to avoid repeatedly creation
-    //of objects
+   
     private EdgeSegmentor edge_seg;
     private EdgeReducer edge_reducer;
     private EdgeFilter edge_filter;
     private EdgeMapper edge_mapper;
     private CliqueMiner clique_miner;
-//    private EagerCliqueMiner clique_miner;
     private EdgeLSimplification edge_simplifier;
     
     
